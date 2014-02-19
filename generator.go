@@ -58,8 +58,9 @@ func (g *generator) parse(path string) (template.Template, error) {
 			if err != nil {
 				return template.Template{}, err
 			}
-			tpl.AppendElement(e)
+			tpl.AppendElement(&e)
 			err = appendChildren(&e, lines, &i, &l)
+
 		}
 	}
 	return tpl, nil

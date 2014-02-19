@@ -162,6 +162,13 @@ func (e *Element) html(bf *bytes.Buffer) error {
 	if e.hasTextValues() {
 		e.writeTextValue(bf)
 	}
+	for _, child := range e.Children {
+		err := child.html(bf)
+		if err != nil {
+			return err
+		}
+	}
+	e.writeCloseTag(bf)
 	return nil
 }
 
@@ -248,6 +255,17 @@ func (e *Element) writeTextValue(bf *bytes.Buffer) {
 	case "doctype":
 	default:
 		bf.WriteString(e.textValue())
+	}
+}
+
+// writeCloseTag writes the element's close tag to the buffer.
+func (e *Element) writeCloseTag(bf *bytes.Buffer) {
+	switch e.Tag {
+	case "doctype":
+	default:
+		bf.WriteString("</")
+		bf.WriteString(e.Tag)
+		bf.WriteString(">")
 	}
 }
 

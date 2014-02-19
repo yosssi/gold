@@ -6,11 +6,11 @@ import (
 
 // A template represents a Gold template.
 type Template struct {
-	Elements []Element
+	Elements []*Element
 }
 
 // AppendElement appends the element to the template's elements.
-func (t *Template) AppendElement(e Element) {
+func (t *Template) AppendElement(e *Element) {
 	t.Elements = append(t.Elements, e)
 }
 
