@@ -63,12 +63,15 @@ func (g *generator) parse(path string) (template.Template, error) {
 
 		}
 	}
+	if g.cache {
+		g.templates[path] = tpl
+	}
 	return tpl, nil
 }
 
 // NewGenerator generages a generator and returns it.
 func NewGenerator(cache bool) generator {
-	return generator{cache: cache}
+	return generator{cache: cache, templates: make(map[string]template.Template)}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.

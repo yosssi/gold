@@ -235,6 +235,7 @@ func (e *Element) writeOpenTag(bf *bytes.Buffer) {
 // writeText writes the element's text to the buffer.
 func (e *Element) writeText(bf *bytes.Buffer) {
 	bf.WriteString(e.Text)
+	bf.WriteString("\n")
 }
 
 // textValue returns the element's textValues.
