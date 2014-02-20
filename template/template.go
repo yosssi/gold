@@ -2,10 +2,12 @@ package template
 
 import (
 	"bytes"
+	"strings"
 )
 
 // A template represents a Gold template.
 type Template struct {
+	Path     string
 	Elements []*Element
 	Super    *Template
 	Blocks   map[string]*Block
@@ -26,4 +28,21 @@ func (t *Template) Html() (string, error) {
 		}
 	}
 	return bf.String(), nil
+}
+
+// Dir returns the template file's directory.
+func (t *Template) Dir() string {
+	tokens := strings.Split(t.Path, "/")
+	l := len(tokens)
+	switch {
+	case l < 2:
+		return "./"
+	default:
+		return strings.Join(tokens[:l-1], "/") + "/"
+	}
+}
+
+// NewTemplate generates a new template and returns it.
+func NewTemplate(path string) *Template {
+	return &Template{Path: path, Blocks: make(map[string]*Block)}
 }

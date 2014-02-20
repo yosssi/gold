@@ -18,7 +18,7 @@ const (
 // A generator represents an HTML generator.
 type generator struct {
 	cache     bool
-	templates map[string]template.Template
+	templates map[string]*template.Template
 }
 
 // Html parses a template and returns an html string.
@@ -35,7 +35,7 @@ func (g *generator) Html(path string, data interface{}) (string, error) {
 }
 
 // parse parses a Gold template file and returns a template.
-func (g *generator) parse(path string) (template.Template, error) {
+func (g *generator) parse(path string) (*template.Template, error) {
 	if g.cache {
 		if tpl, prs := g.templates[path]; prs {
 			return tpl, nil
@@ -43,11 +43,11 @@ func (g *generator) parse(path string) (template.Template, error) {
 	}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		return template.Template{}, err
+		return nil, err
 	}
 	lines := strings.Split(formatLf(string(b)), "\n")
 	i, l := 0, len(lines)
-	tpl := template.Template{Blocks: make(map[string]*template.Block)}
+	tpl := template.NewTemplate(path)
 	for i < l {
 		line := lines[i]
 		i++
@@ -55,14 +55,14 @@ func (g *generator) parse(path string) (template.Template, error) {
 			continue
 		}
 		if topElement(line) {
-			e, err := template.NewElement(line, i, indentTop, nil)
+			e, err := template.NewElement(line, i, indentTop, nil, tpl)
 			if err != nil {
-				return template.Template{}, err
+				return nil, err
 			}
-			tpl.AppendElement(&e)
-			err = appendChildren(&e, lines, &i, &l)
+			tpl.AppendElement(e)
+			err = appendChildren(e, lines, &i, &l)
 			if err != nil {
-				return template.Template{}, err
+				return nil, err
 			}
 		}
 	}
@@ -74,7 +74,7 @@ func (g *generator) parse(path string) (template.Template, error) {
 
 // NewGenerator generages a generator and returns it.
 func NewGenerator(cache bool) generator {
-	return generator{cache: cache, templates: make(map[string]template.Template)}
+	return generator{cache: cache, templates: make(map[string]*template.Template)}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.
@@ -152,13 +152,13 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 
 // appendChild appends the child element to the parent element.
 func appendChild(parent *template.Element, line *string, indent *int, lines []string, i *int, l *int) error {
-	child, err := template.NewElement(*line, *i+1, *indent, parent)
+	child, err := template.NewElement(*line, *i+1, *indent, parent, nil)
 	if err != nil {
 		return err
 	}
-	parent.AppendChild(&child)
+	parent.AppendChild(child)
 	*i++
-	err = appendChildren(&child, lines, i, l)
+	err = appendChildren(child, lines, i, l)
 	if err != nil {
 		return err
 	}

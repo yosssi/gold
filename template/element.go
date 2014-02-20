@@ -11,6 +11,7 @@ const (
 	unicodeDoubleQuote     = 34
 	TypeTag                = "tag"
 	TypeScriptStyleContent = "scriptStyleContent"
+	TypeExtends            = "extends"
 )
 
 var (
@@ -40,6 +41,7 @@ type Element struct {
 	Classes    []string
 	TextValues []string
 	Type       string
+	Template   *Template
 }
 
 // parse parses the element.
@@ -49,6 +51,9 @@ func (e *Element) parse() error {
 	}
 	switch {
 	case e.Type == TypeScriptStyleContent:
+	case e.Type == TypeExtends:
+		tpl := e.getTemplate()
+		fmt.Println("AAA  ", tpl.Dir())
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -190,6 +195,7 @@ func (e *Element) html(bf *bytes.Buffer) error {
 				return err
 			}
 		}
+	case e.Type == TypeExtends:
 	default:
 		e.writeOpenTag(bf)
 		if e.hasTextValues() {
@@ -314,20 +320,32 @@ func (e *Element) setType() {
 	switch {
 	case e.Parent != nil && (e.Parent.Tag == "script" || e.Parent.Tag == "style" || e.Parent.Type == TypeScriptStyleContent):
 		e.Type = TypeScriptStyleContent
+	case len(e.Tokens) > 0 && e.Tokens[0] == "extends":
+		e.Type = TypeExtends
 	default:
 		e.Type = TypeTag
 	}
 }
 
+// getTemplate returns the element's template.
+func (e *Element) getTemplate() *Template {
+	switch {
+	case e.Parent != nil:
+		return e.Parent.getTemplate()
+	default:
+		return e.Template
+	}
+}
+
 // NewElement generates a new element and returns it.
-func NewElement(text string, lineNo int, indent int, parent *Element) (Element, error) {
+func NewElement(text string, lineNo int, indent int, parent *Element, tpl *Template) (*Element, error) {
 	text = strings.TrimSpace(text)
 	tokens := tokens(text)
-	e := Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string)}
+	e := &Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Template: tpl}
 	e.setType()
 	err := e.parse()
 	if err != nil {
-		return Element{}, err
+		return nil, err
 	}
 	return e, nil
 }
