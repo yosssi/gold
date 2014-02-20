@@ -26,7 +26,7 @@ var (
 	}
 )
 
-// An element represents an html element.
+// An Element represents an  element of a Gold template.
 type Element struct {
 	Text       string
 	Tokens     []string
@@ -92,11 +92,6 @@ func (e *Element) parseFirstToken(token string) error {
 		}
 	}
 	return nil
-}
-
-// setType sets the type to the element.
-func (e *Element) setType(t string) {
-	e.Type = t
 }
 
 // setTag extracts a tag from the token and sets it to the element.
@@ -314,11 +309,22 @@ func (e *Element) writeCloseTag(bf *bytes.Buffer) {
 	}
 }
 
+// setType sets a type to the element.
+func (e *Element) setType() {
+	switch {
+	case e.Parent != nil && (e.Parent.Tag == "script" || e.Parent.Tag == "style" || e.Parent.Type == TypeScriptStyleContent):
+		e.Type = TypeScriptStyleContent
+	default:
+		e.Type = TypeTag
+	}
+}
+
 // NewElement generates a new element and returns it.
-func NewElement(text string, lineNo int, indent int, parent *Element, eType string) (Element, error) {
+func NewElement(text string, lineNo int, indent int, parent *Element) (Element, error) {
 	text = strings.TrimSpace(text)
 	tokens := tokens(text)
-	e := Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Type: eType}
+	e := Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string)}
+	e.setType()
 	err := e.parse()
 	if err != nil {
 		return Element{}, err

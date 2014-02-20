@@ -7,6 +7,8 @@ import (
 // A template represents a Gold template.
 type Template struct {
 	Elements []*Element
+	Super    *Template
+	Blocks   map[string]*Block
 }
 
 // AppendElement appends the element to the template's elements.

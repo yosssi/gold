@@ -47,7 +47,7 @@ func (g *generator) parse(path string) (template.Template, error) {
 	}
 	lines := strings.Split(formatLf(string(b)), "\n")
 	i, l := 0, len(lines)
-	tpl := template.Template{}
+	tpl := template.Template{Blocks: make(map[string]*template.Block)}
 	for i < l {
 		line := lines[i]
 		i++
@@ -55,7 +55,7 @@ func (g *generator) parse(path string) (template.Template, error) {
 			continue
 		}
 		if topElement(line) {
-			e, err := template.NewElement(line, i, indentTop, nil, template.TypeTag)
+			e, err := template.NewElement(line, i, indentTop, nil)
 			if err != nil {
 				return template.Template{}, err
 			}
@@ -130,7 +130,7 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 			case indent < parent.Indent+1:
 				return nil
 			default:
-				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeScriptStyleContent); err != nil {
+				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
 					return err
 				}
 			}
@@ -139,7 +139,7 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 			case indent < parent.Indent+1:
 				return nil
 			case indent == parent.Indent+1:
-				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeTag); err != nil {
+				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
 					return err
 				}
 			case indent > parent.Indent+1:
@@ -151,8 +151,8 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 }
 
 // appendChild appends the child element to the parent element.
-func appendChild(parent *template.Element, line *string, indent *int, lines []string, i *int, l *int, eType string) error {
-	child, err := template.NewElement(*line, *i+1, *indent, parent, eType)
+func appendChild(parent *template.Element, line *string, indent *int, lines []string, i *int, l *int) error {
+	child, err := template.NewElement(*line, *i+1, *indent, parent)
 	if err != nil {
 		return err
 	}
