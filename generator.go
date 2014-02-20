@@ -107,13 +107,13 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 	for *i < *l {
 		line := lines[*i]
 		indent := indent(line)
-		switch parent.Tag {
-		case "script":
+		switch {
+		case parent.Tag == "script" || parent.Tag == "style" || parent.Type == template.TypeScriptStyleContent:
 			switch {
 			case indent < parent.Indent+1:
 				return nil
 			default:
-				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeScriptContent); err != nil {
+				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeScriptStyleContent); err != nil {
 					return err
 				}
 			}

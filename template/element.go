@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	unicodeDoubleQuote = 34
-	TypeTag            = "tag"
-	TypeScriptContent  = "scriptContent"
+	unicodeDoubleQuote     = 34
+	TypeTag                = "tag"
+	TypeScriptStyleContent = "scriptStyleContent"
 )
 
 var (
@@ -48,7 +48,7 @@ func (e *Element) parse() error {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
 	switch {
-	case e.Type == TypeScriptContent:
+	case e.Type == TypeScriptStyleContent:
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -187,8 +187,14 @@ func (e *Element) AppendChild(child *Element) {
 // html writes the element's html to the buffer.
 func (e *Element) html(bf *bytes.Buffer) error {
 	switch {
-	case e.Type == TypeScriptContent:
+	case e.Type == TypeScriptStyleContent:
 		e.writeText(bf)
+		for _, child := range e.Children {
+			err := child.html(bf)
+			if err != nil {
+				return err
+			}
+		}
 	default:
 		e.writeOpenTag(bf)
 		if e.hasTextValues() {
