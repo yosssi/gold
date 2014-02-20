@@ -54,7 +54,7 @@ func (g *generator) parse(path string) (template.Template, error) {
 			continue
 		}
 		if topElement(line) {
-			e, err := template.NewElement(line, i, indentTop, nil)
+			e, err := template.NewElement(line, i, indentTop, nil, template.TypeTag)
 			if err != nil {
 				return template.Template{}, err
 			}
@@ -100,27 +100,47 @@ func topElement(s string) bool {
 }
 
 // appendChildren fetches the lines and appends child elements to the element.
-func appendChildren(e *template.Element, lines []string, i *int, l *int) error {
+func appendChildren(parent *template.Element, lines []string, i *int, l *int) error {
 	for *i < *l {
 		line := lines[*i]
 		indent := indent(line)
-		switch {
-		case e.Indent+1 < indent:
-			return errors.New(fmt.Sprintf("The indent of the line %d is invalid.", *i+1))
-		case e.Indent+1 == indent:
-			child, err := template.NewElement(line, *i+1, indent, e)
-			if err != nil {
-				return err
+		switch parent.Tag {
+		case "script":
+			switch {
+			case indent < parent.Indent+1:
+				return nil
+			default:
+				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeScriptContent); err != nil {
+					return err
+				}
 			}
-			e.AppendChild(&child)
-			*i++
-			err = appendChildren(&child, lines, i, l)
-			if err != nil {
-				return err
+		default:
+			switch {
+			case indent < parent.Indent+1:
+				return nil
+			case indent == parent.Indent+1:
+				if err := appendChild(parent, &line, &indent, lines, i, l, template.TypeTag); err != nil {
+					return err
+				}
+			case indent > parent.Indent+1:
+				return errors.New(fmt.Sprintf("The indent of the line %d is invalid.", *i+1))
 			}
-		case e.Indent+1 > indent:
-			return nil
 		}
+	}
+	return nil
+}
+
+// appendChild appends the child element to the parent element.
+func appendChild(parent *template.Element, line *string, indent *int, lines []string, i *int, l *int, eType string) error {
+	child, err := template.NewElement(*line, *i+1, *indent, parent, eType)
+	if err != nil {
+		return err
+	}
+	parent.AppendChild(&child)
+	*i++
+	err = appendChildren(&child, lines, i, l)
+	if err != nil {
+		return err
 	}
 	return nil
 }

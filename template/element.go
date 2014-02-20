@@ -9,6 +9,8 @@ import (
 
 const (
 	unicodeDoubleQuote = 34
+	TypeTag            = "tag"
+	TypeScriptContent  = "scriptContent"
 )
 
 var (
@@ -37,6 +39,7 @@ type Element struct {
 	Id         string
 	Classes    []string
 	TextValues []string
+	Type       string
 }
 
 // parse parses the element.
@@ -44,18 +47,22 @@ func (e *Element) parse() error {
 	if e.hasNoTokens() {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
-	for i, token := range e.Tokens {
-		switch {
-		case i == 0:
-			if err := e.setTag(token); err != nil {
-				return err
+	switch {
+	case e.Type == TypeScriptContent:
+	default:
+		for i, token := range e.Tokens {
+			switch {
+			case i == 0:
+				if err := e.parseFirstToken(token); err != nil {
+					return err
+				}
+			case e.hasTextValues():
+				e.appendTextValue(token)
+			case attribute(token):
+				e.appendAttribute(token)
+			default:
+				e.appendTextValue(token)
 			}
-		case e.hasTextValues():
-			e.appendTextValue(token)
-		case attribute(token):
-			e.appendAttribute(token)
-		default:
-			e.appendTextValue(token)
 		}
 	}
 	return nil
@@ -69,6 +76,27 @@ func (e *Element) hasNoTokens() bool {
 // hasTextValues returns if the element has textValues.
 func (e *Element) hasTextValues() bool {
 	return len(e.TextValues) > 0
+}
+
+// parseFirstToken parses the token and sets values to the element.
+func (e *Element) parseFirstToken(token string) error {
+	switch token {
+	case "javascript:":
+		if err := e.setTag("script"); err != nil {
+			return err
+		}
+		e.appendAttribute("type=text/javascript")
+	default:
+		if err := e.setTag(token); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setType sets the type to the element.
+func (e *Element) setType(t string) {
+	e.Type = t
 }
 
 // setTag extracts a tag from the token and sets it to the element.
@@ -158,17 +186,22 @@ func (e *Element) AppendChild(child *Element) {
 
 // html writes the element's html to the buffer.
 func (e *Element) html(bf *bytes.Buffer) error {
-	e.writeOpenTag(bf)
-	if e.hasTextValues() {
-		e.writeTextValue(bf)
-	}
-	for _, child := range e.Children {
-		err := child.html(bf)
-		if err != nil {
-			return err
+	switch {
+	case e.Type == TypeScriptContent:
+		e.writeText(bf)
+	default:
+		e.writeOpenTag(bf)
+		if e.hasTextValues() {
+			e.writeTextValue(bf)
 		}
+		for _, child := range e.Children {
+			err := child.html(bf)
+			if err != nil {
+				return err
+			}
+		}
+		e.writeCloseTag(bf)
 	}
-	e.writeCloseTag(bf)
 	return nil
 }
 
@@ -197,6 +230,11 @@ func (e *Element) writeOpenTag(bf *bytes.Buffer) {
 		}
 		bf.WriteString(">")
 	}
+}
+
+// writeText writes the element's text to the buffer.
+func (e *Element) writeText(bf *bytes.Buffer) {
+	bf.WriteString(e.Text)
 }
 
 // textValue returns the element's textValues.
@@ -270,10 +308,10 @@ func (e *Element) writeCloseTag(bf *bytes.Buffer) {
 }
 
 // NewElement generates a new element and returns it.
-func NewElement(text string, lineNo int, indent int, parent *Element) (Element, error) {
+func NewElement(text string, lineNo int, indent int, parent *Element, eType string) (Element, error) {
 	text = strings.TrimSpace(text)
 	tokens := tokens(text)
-	e := Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string)}
+	e := Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Type: eType}
 	err := e.parse()
 	if err != nil {
 		return Element{}, err
