@@ -10,6 +10,7 @@ import (
 
 const (
 	unicodeTab         = 9
+	unicodeSpace       = 32
 	unicodeDoubleQuote = 34
 	indentTop          = 0
 )
@@ -60,7 +61,9 @@ func (g *generator) parse(path string) (template.Template, error) {
 			}
 			tpl.AppendElement(&e)
 			err = appendChildren(&e, lines, &i, &l)
-
+			if err != nil {
+				return template.Template{}, err
+			}
 		}
 	}
 	if g.cache {
@@ -82,11 +85,21 @@ func formatLf(s string) string {
 // indent returns the string's indent.
 func indent(s string) int {
 	i := 0
+	space := false
+indentLoop:
 	for _, b := range s {
-		if b == unicodeTab {
+		switch b {
+		case unicodeTab:
 			i++
-		} else {
-			break
+		case unicodeSpace:
+			if space {
+				i++
+				space = false
+			} else {
+				space = true
+			}
+		default:
+			break indentLoop
 		}
 	}
 	return i
@@ -106,6 +119,10 @@ func topElement(s string) bool {
 func appendChildren(parent *template.Element, lines []string, i *int, l *int) error {
 	for *i < *l {
 		line := lines[*i]
+		if empty(line) {
+			*i++
+			continue
+		}
 		indent := indent(line)
 		switch {
 		case parent.Tag == "script" || parent.Tag == "style" || parent.Type == template.TypeScriptStyleContent:
