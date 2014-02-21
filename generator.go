@@ -3,7 +3,8 @@ package gold
 import (
 	"errors"
 	"fmt"
-	"github.com/yosssi/gold/template"
+	gtemplate "github.com/yosssi/gold/template"
+	"html/template"
 	"io/ioutil"
 	"strings"
 )
@@ -17,27 +18,40 @@ const (
 
 // A generator represents an HTML generator.
 type generator struct {
-	cache     bool
-	templates map[string]*template.Template
+	cache      bool
+	templates  map[string]*template.Template
+	gtemplates map[string]*gtemplate.Template
 }
 
-// Html parses a template and returns an html string.
-func (g *generator) Html(path string, data interface{}) (string, error) {
-	tpl, err := g.parse(path)
-	if err != nil {
-		return "", err
-	}
-	html, err := tpl.Html()
-	if err != nil {
-		return "", err
-	}
-	return html, nil
-}
-
-// parse parses a Gold template file and returns a template.
-func (g *generator) parse(path string) (*template.Template, error) {
+// ParseFile parses a Gold template file and returns an HTML template.
+func (g *generator) ParseFile(path string) (*template.Template, error) {
 	if g.cache {
 		if tpl, prs := g.templates[path]; prs {
+			return tpl, nil
+		}
+	}
+	gtpl, err := g.parse(path)
+	if err != nil {
+		return nil, err
+	}
+	html, err := gtpl.Html()
+	if err != nil {
+		return nil, err
+	}
+	tpl, err := template.New(path).Parse(html)
+	if err != nil {
+		return nil, err
+	}
+	if g.cache {
+		g.templates[path] = tpl
+	}
+	return tpl, nil
+}
+
+// parse parses a Gold template file and returns a Gold template.
+func (g *generator) parse(path string) (*gtemplate.Template, error) {
+	if g.cache {
+		if tpl, prs := g.gtemplates[path]; prs {
 			return tpl, nil
 		}
 	}
@@ -47,7 +61,7 @@ func (g *generator) parse(path string) (*template.Template, error) {
 	}
 	lines := strings.Split(formatLf(string(b)), "\n")
 	i, l := 0, len(lines)
-	tpl := template.NewTemplate(path)
+	tpl := gtemplate.NewTemplate(path)
 	for i < l {
 		line := lines[i]
 		i++
@@ -55,7 +69,7 @@ func (g *generator) parse(path string) (*template.Template, error) {
 			continue
 		}
 		if topElement(line) {
-			e, err := template.NewElement(line, i, indentTop, nil, tpl)
+			e, err := gtemplate.NewElement(line, i, indentTop, nil, tpl)
 			if err != nil {
 				return nil, err
 			}
@@ -67,7 +81,7 @@ func (g *generator) parse(path string) (*template.Template, error) {
 		}
 	}
 	if g.cache {
-		g.templates[path] = tpl
+		g.gtemplates[path] = tpl
 	}
 	return tpl, nil
 }
@@ -116,7 +130,7 @@ func topElement(s string) bool {
 }
 
 // appendChildren fetches the lines and appends child elements to the element.
-func appendChildren(parent *template.Element, lines []string, i *int, l *int) error {
+func appendChildren(parent *gtemplate.Element, lines []string, i *int, l *int) error {
 	for *i < *l {
 		line := lines[*i]
 		if empty(line) {
@@ -125,7 +139,7 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 		}
 		indent := indent(line)
 		switch {
-		case parent.Tag == "script" || parent.Tag == "style" || parent.Type == template.TypeScriptStyleContent:
+		case parent.Tag == "script" || parent.Tag == "style" || parent.Type == gtemplate.TypeScriptStyleContent:
 			switch {
 			case indent < parent.Indent+1:
 				return nil
@@ -151,8 +165,8 @@ func appendChildren(parent *template.Element, lines []string, i *int, l *int) er
 }
 
 // appendChild appends the child element to the parent element.
-func appendChild(parent *template.Element, line *string, indent *int, lines []string, i *int, l *int) error {
-	child, err := template.NewElement(*line, *i+1, *indent, parent, nil)
+func appendChild(parent *gtemplate.Element, line *string, indent *int, lines []string, i *int, l *int) error {
+	child, err := gtemplate.NewElement(*line, *i+1, *indent, parent, nil)
 	if err != nil {
 		return err
 	}
