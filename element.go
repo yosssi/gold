@@ -43,6 +43,7 @@ type Element struct {
 	TextValues []string
 	Type       string
 	Template   *Template
+	Block      *Block
 }
 
 // parse parses the element.
@@ -57,7 +58,12 @@ func (e *Element) parse() error {
 			return errors.New(fmt.Sprintf("The element tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsTokensLen, l, e.LineNo))
 		}
 		tpl := e.getTemplate()
-		fmt.Println("AAA  ", tpl.Dir()+e.Tokens[1]+goldExtension)
+		g := tpl.Generator
+		superTpl, err := g.Parse(tpl.Dir() + e.Tokens[1] + goldExtension)
+		if err != nil {
+			return err
+		}
+		tpl.Super = superTpl
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -336,6 +342,8 @@ func (e *Element) getTemplate() *Template {
 	switch {
 	case e.Parent != nil:
 		return e.Parent.getTemplate()
+	case e.Block != nil:
+		return e.Block.Template
 	default:
 		return e.Template
 	}

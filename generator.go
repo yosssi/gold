@@ -29,7 +29,7 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 			return tpl, nil
 		}
 	}
-	gtpl, err := g.parse(path)
+	gtpl, err := g.Parse(path)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 }
 
 // parse parses a Gold template file and returns a Gold template.
-func (g *Generator) parse(path string) (*Template, error) {
+func (g *Generator) Parse(path string) (*Template, error) {
 	if g.cache {
 		if tpl, prs := g.gtemplates[path]; prs {
 			return tpl, nil
