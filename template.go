@@ -1,4 +1,4 @@
-package template
+package gold
 
 import (
 	"bytes"
@@ -7,10 +7,11 @@ import (
 
 // A template represents a Gold template.
 type Template struct {
-	Path     string
-	Elements []*Element
-	Super    *Template
-	Blocks   map[string]*Block
+	Path      string
+	Generator *Generator
+	Elements  []*Element
+	Super     *Template
+	Blocks    map[string]*Block
 }
 
 // AppendElement appends the element to the template's elements.
@@ -43,6 +44,6 @@ func (t *Template) Dir() string {
 }
 
 // NewTemplate generates a new template and returns it.
-func NewTemplate(path string) *Template {
+func NewTemplate(path string, generator *Generator) *Template {
 	return &Template{Path: path, Blocks: make(map[string]*Block)}
 }

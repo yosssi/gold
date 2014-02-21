@@ -1,4 +1,4 @@
-package template
+package gold
 
 import (
 	"bytes"
@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	unicodeDoubleQuote     = 34
 	TypeTag                = "tag"
 	TypeScriptStyleContent = "scriptStyleContent"
 	TypeExtends            = "extends"
+	extendsTokensLen       = 2
+	goldExtension          = ".gold"
 )
 
 var (
@@ -52,8 +53,11 @@ func (e *Element) parse() error {
 	switch {
 	case e.Type == TypeScriptStyleContent:
 	case e.Type == TypeExtends:
+		if l := len(e.Tokens); l != extendsTokensLen {
+			return errors.New(fmt.Sprintf("The element tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsTokensLen, l, e.LineNo))
+		}
 		tpl := e.getTemplate()
-		fmt.Println("AAA  ", tpl.Dir())
+		fmt.Println("AAA  ", tpl.Dir()+e.Tokens[1]+goldExtension)
 	default:
 		for i, token := range e.Tokens {
 			switch {
