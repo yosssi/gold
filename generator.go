@@ -9,10 +9,12 @@ import (
 )
 
 const (
-	unicodeTab         = 9
-	unicodeSpace       = 32
-	unicodeDoubleQuote = 34
-	indentTop          = 0
+	unicodeTab            = 9
+	unicodeSpace          = 32
+	unicodeDoubleQuote    = 34
+	indentTop             = 0
+	extendsBlockTokensLen = 2
+	goldExtension         = ".gold"
 )
 
 // A generator represents an HTML generator.
@@ -34,6 +36,7 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 		return nil, err
 	}
 	html, err := gtpl.Html()
+	fmt.Println(html)
 	if err != nil {
 		return nil, err
 	}
@@ -68,14 +71,37 @@ func (g *Generator) Parse(path string) (*Template, error) {
 			continue
 		}
 		if topElement(line) {
-			e, err := NewElement(line, i, indentTop, nil, tpl)
-			if err != nil {
-				return nil, err
-			}
-			tpl.AppendElement(e)
-			err = appendChildren(e, lines, &i, &l)
-			if err != nil {
-				return nil, err
+			switch {
+			case isExtends(line):
+				tokens := strings.Split(strings.TrimSpace(line), " ")
+				if l := len(tokens); l != extendsBlockTokensLen {
+					return nil, errors.New(fmt.Sprintf("The lien tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
+				}
+				superTpl, err := g.Parse(tpl.Dir() + tokens[1] + goldExtension)
+				if err != nil {
+					return nil, err
+				}
+				superTpl.Sub = tpl
+				tpl.Super = superTpl
+			case tpl.Super != nil && isBlock(line):
+				tokens := strings.Split(strings.TrimSpace(line), " ")
+				if l := len(tokens); l != extendsBlockTokensLen {
+					return nil, errors.New(fmt.Sprintf("The lien tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
+				}
+				block := &Block{Name: tokens[1], Template: tpl}
+				tpl.AddBlock(block.Name, block)
+				if err := appendChildren(block, lines, &i, &l, indentTop, false, ""); err != nil {
+					return nil, err
+				}
+			default:
+				e, err := NewElement(line, i, indentTop, nil, tpl, nil)
+				if err != nil {
+					return nil, err
+				}
+				tpl.AppendElement(e)
+				if err := appendChildren(e, lines, &i, &l, indentTop, e.RawContent, e.Type); err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
@@ -129,7 +155,7 @@ func topElement(s string) bool {
 }
 
 // appendChildren fetches the lines and appends child elements to the element.
-func appendChildren(parent *Element, lines []string, i *int, l *int) error {
+func appendChildren(parent Container, lines []string, i *int, l *int, parentIndent int, parentRawContent bool, parentType string) error {
 	for *i < *l {
 		line := lines[*i]
 		if empty(line) {
@@ -138,24 +164,31 @@ func appendChildren(parent *Element, lines []string, i *int, l *int) error {
 		}
 		indent := indent(line)
 		switch {
-		case parent.Tag == "script" || parent.Tag == "style" || parent.Type == TypeScriptStyleContent:
+		case parentRawContent || parentType == TypeContent:
 			switch {
-			case indent < parent.Indent+1:
+			case indent < parentIndent+1:
 				return nil
 			default:
 				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
 					return err
 				}
 			}
+		case parentType == TypeBlock:
+			switch {
+			case indent < parentIndent+1:
+				return nil
+			default:
+				return errors.New(fmt.Sprintf("The indent of the line %d is invalid. Block element can not have child elements.", *i+1))
+			}
 		default:
 			switch {
-			case indent < parent.Indent+1:
+			case indent < parentIndent+1:
 				return nil
-			case indent == parent.Indent+1:
+			case indent == parentIndent+1:
 				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
 					return err
 				}
-			case indent > parent.Indent+1:
+			case indent > parentIndent+1:
 				return errors.New(fmt.Sprintf("The indent of the line %d is invalid.", *i+1))
 			}
 		}
@@ -164,16 +197,33 @@ func appendChildren(parent *Element, lines []string, i *int, l *int) error {
 }
 
 // appendChild appends the child element to the parent element.
-func appendChild(parent *Element, line *string, indent *int, lines []string, i *int, l *int) error {
-	child, err := NewElement(*line, *i+1, *indent, parent, nil)
+func appendChild(parent Container, line *string, indent *int, lines []string, i *int, l *int) error {
+	var child *Element
+	var err error
+	switch p := parent.(type) {
+	case *Block:
+		child, err = NewElement(*line, *i+1, *indent, nil, nil, p)
+	case *Element:
+		child, err = NewElement(*line, *i+1, *indent, p, nil, nil)
+	}
 	if err != nil {
 		return err
 	}
 	parent.AppendChild(child)
 	*i++
-	err = appendChildren(child, lines, i, l)
+	err = appendChildren(child, lines, i, l, child.Indent, child.RawContent, child.Type)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// isExtends returns if the line's prefix is "extends" or not.
+func isExtends(line string) bool {
+	return strings.HasPrefix(line, "extends ")
+}
+
+// isBlock returns if the line's prefix is "block" or not.
+func isBlock(line string) bool {
+	return strings.HasPrefix(line, "block ")
 }

@@ -11,6 +11,7 @@ type Template struct {
 	Generator *Generator
 	Elements  []*Element
 	Super     *Template
+	Sub       *Template
 	Blocks    map[string]*Block
 }
 
@@ -21,14 +22,18 @@ func (t *Template) AppendElement(e *Element) {
 
 // Html generates an html and returns it.
 func (t *Template) Html() (string, error) {
-	var bf bytes.Buffer
-	for _, e := range t.Elements {
-		err := e.html(&bf)
-		if err != nil {
-			return "", err
+	if t.Super != nil {
+		return t.Super.Html()
+	} else {
+		var bf bytes.Buffer
+		for _, e := range t.Elements {
+			err := e.Html(&bf)
+			if err != nil {
+				return "", err
+			}
 		}
+		return bf.String(), nil
 	}
-	return bf.String(), nil
 }
 
 // Dir returns the template file's directory.
@@ -41,6 +46,11 @@ func (t *Template) Dir() string {
 	default:
 		return strings.Join(tokens[:l-1], "/") + "/"
 	}
+}
+
+// AddBlock appends the block to the template.
+func (t *Template) AddBlock(name string, block *Block) {
+	t.Blocks[name] = block
 }
 
 // NewTemplate generates a new template and returns it.

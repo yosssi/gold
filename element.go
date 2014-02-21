@@ -8,11 +8,9 @@ import (
 )
 
 const (
-	TypeTag                = "tag"
-	TypeScriptStyleContent = "scriptStyleContent"
-	TypeExtends            = "extends"
-	extendsTokensLen       = 2
-	goldExtension          = ".gold"
+	TypeTag     = "tag"
+	TypeContent = "content"
+	TypeBlock   = "block"
 )
 
 var (
@@ -44,6 +42,7 @@ type Element struct {
 	Type       string
 	Template   *Template
 	Block      *Block
+	RawContent bool
 }
 
 // parse parses the element.
@@ -52,18 +51,8 @@ func (e *Element) parse() error {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
 	switch {
-	case e.Type == TypeScriptStyleContent:
-	case e.Type == TypeExtends:
-		if l := len(e.Tokens); l != extendsTokensLen {
-			return errors.New(fmt.Sprintf("The element tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsTokensLen, l, e.LineNo))
-		}
-		tpl := e.getTemplate()
-		g := tpl.Generator
-		superTpl, err := g.Parse(tpl.Dir() + e.Tokens[1] + goldExtension)
-		if err != nil {
-			return err
-		}
-		tpl.Super = superTpl
+	case e.Type == TypeContent:
+	case e.Type == TypeBlock:
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -121,6 +110,9 @@ func (e *Element) setTag(token string) error {
 		return err
 	}
 	e.appendClassesFromToken(token)
+	if e.Tag == "script" || e.Tag == "style" || strings.HasSuffix(token, ".") {
+		e.RawContent = true
+	}
 	return nil
 }
 
@@ -163,7 +155,9 @@ func (e *Element) appendClassesFromToken(token string) {
 
 // appendClass appends the class to the element's classes.
 func (e *Element) appendClass(class string) {
-	e.Classes = append(e.Classes, class)
+	if class != "" {
+		e.Classes = append(e.Classes, class)
+	}
 }
 
 // appendTextValue appends the token to the element's textValues.
@@ -195,24 +189,37 @@ func (e *Element) AppendChild(child *Element) {
 }
 
 // html writes the element's html to the buffer.
-func (e *Element) html(bf *bytes.Buffer) error {
+func (e *Element) Html(bf *bytes.Buffer) error {
 	switch {
-	case e.Type == TypeScriptStyleContent:
+	case e.Type == TypeContent:
 		e.writeText(bf)
 		for _, child := range e.Children {
-			err := child.html(bf)
+			err := child.Html(bf)
 			if err != nil {
 				return err
 			}
 		}
-	case e.Type == TypeExtends:
+	case e.Type == TypeBlock:
+		if len(e.Tokens) < 2 {
+			return errors.New(fmt.Sprintf("The block element does not have a name. (line no: %d)", e.LineNo))
+		}
+		name := e.Tokens[1]
+		sub := e.getTemplate().Sub
+		if sub == nil {
+			return errors.New(fmt.Sprintf("The template does not have a sub template."))
+		}
+		block := sub.Blocks[name]
+		if block == nil {
+			return errors.New(fmt.Sprintf("The sub template does not have the %s block.", name))
+		}
+		block.Html(bf)
 	default:
 		e.writeOpenTag(bf)
 		if e.hasTextValues() {
 			e.writeTextValue(bf)
 		}
 		for _, child := range e.Children {
-			err := child.html(bf)
+			err := child.Html(bf)
 			if err != nil {
 				return err
 			}
@@ -328,12 +335,24 @@ func (e *Element) writeCloseTag(bf *bytes.Buffer) {
 // setType sets a type to the element.
 func (e *Element) setType() {
 	switch {
-	case e.Parent != nil && (e.Parent.Tag == "script" || e.Parent.Tag == "style" || e.Parent.Type == TypeScriptStyleContent):
-		e.Type = TypeScriptStyleContent
-	case len(e.Tokens) > 0 && e.Tokens[0] == "extends":
-		e.Type = TypeExtends
+	case e.Parent != nil && (e.Parent.RawContent || e.Parent.Type == TypeContent):
+		e.Type = TypeContent
+	case len(e.Tokens) > 0 && e.Tokens[0] == "block":
+		e.Type = TypeBlock
 	default:
 		e.Type = TypeTag
+	}
+}
+
+// getBlock returns the element's block.
+func (e *Element) getBlock() *Block {
+	switch {
+	case e.Parent != nil:
+		return e.Parent.getBlock()
+	case e.Block != nil:
+		return e.Block
+	default:
+		return nil
 	}
 }
 
@@ -350,10 +369,10 @@ func (e *Element) getTemplate() *Template {
 }
 
 // NewElement generates a new element and returns it.
-func NewElement(text string, lineNo int, indent int, parent *Element, tpl *Template) (*Element, error) {
+func NewElement(text string, lineNo int, indent int, parent *Element, tpl *Template, block *Block) (*Element, error) {
 	text = strings.TrimSpace(text)
 	tokens := tokens(text)
-	e := &Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Template: tpl}
+	e := &Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Template: tpl, Block: block}
 	e.setType()
 	err := e.parse()
 	if err != nil {
