@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParse(t *testing.T) {
+func TestElementParse(t *testing.T) {
 	// When an element has no tokens.
 	e := &Element{LineNo: 5}
 	err := e.parse()
@@ -53,7 +53,7 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestHasNoTokens(t *testing.T) {
+func TestElementHasNoTokens(t *testing.T) {
 	// When an element has no tokens.
 	e := &Element{Tokens: nil}
 	if e.hasNoTokens() != true {
@@ -67,7 +67,7 @@ func TestHasNoTokens(t *testing.T) {
 	}
 }
 
-func TestHasTextValues(t *testing.T) {
+func TestElementHasTextValues(t *testing.T) {
 	// When an element has text values.
 	e := &Element{TextValues: []string{"test"}}
 	if e.hasTextValues() != true {
@@ -81,7 +81,7 @@ func TestHasTextValues(t *testing.T) {
 	}
 }
 
-func TestParseFirstToken(t *testing.T) {
+func TestElementParseFirstToken(t *testing.T) {
 	// When parsing "javascript:".
 	e := &Element{Attributes: make(map[string]string)}
 	if err := e.parseFirstToken("javascript:"); err != nil {
@@ -119,7 +119,7 @@ func TestParseFirstToken(t *testing.T) {
 	}
 }
 
-func TestSetTag(t *testing.T) {
+func TestElementSetTag(t *testing.T) {
 	// When a tag is "".
 	e := &Element{Attributes: make(map[string]string)}
 	if err := e.setTag(".class"); err != nil {
@@ -160,7 +160,7 @@ func TestSetTag(t *testing.T) {
 	}
 }
 
-func TestSetIdFromToken(t *testing.T) {
+func TestElementSetIdFromToken(t *testing.T) {
 	// When a token has no ids.
 	e := &Element{Attributes: make(map[string]string)}
 	if err := e.setIdFromToken("div"); err != nil {
@@ -187,7 +187,7 @@ func TestSetIdFromToken(t *testing.T) {
 	}
 }
 
-func TestSetId(t *testing.T) {
+func TestElementSetId(t *testing.T) {
 	// When setting an id to the element.
 	e := &Element{Attributes: make(map[string]string), LineNo: 1}
 	if err := e.setId("id"); err != nil {
@@ -204,7 +204,7 @@ func TestSetId(t *testing.T) {
 	}
 }
 
-func TestMultipleIdsError(t *testing.T) {
+func TestElementMultipleIdsError(t *testing.T) {
 	e := &Element{Attributes: make(map[string]string), LineNo: 1}
 	expectedErrMsg := fmt.Sprintf("The number of the element id has to be one. (line no: %d)", e.LineNo)
 	if err := e.multipleIdsError(); err == nil || err.Error() != expectedErrMsg {
