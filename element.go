@@ -87,9 +87,7 @@ func (e *Element) hasTextValues() bool {
 func (e *Element) parseFirstToken(token string) error {
 	switch token {
 	case "javascript:":
-		if err := e.setTag("script"); err != nil {
-			return err
-		}
+		e.setTag("script")
 		e.appendAttribute("type=text/javascript")
 	default:
 		if err := e.setTag(token); err != nil {
@@ -125,7 +123,7 @@ func (e *Element) setIdFromToken(token string) error {
 	case 2:
 		e.setId(strings.Split(parts[1], ".")[0])
 	default:
-		e.multipleIdsError()
+		return e.multipleIdsError()
 	}
 	return nil
 }
