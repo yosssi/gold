@@ -8,9 +8,11 @@ import (
 )
 
 const (
-	TypeTag     = "tag"
-	TypeContent = "content"
-	TypeBlock   = "block"
+	TypeTag        = "tag"
+	TypeContent    = "content"
+	TypeBlock      = "block"
+	TypeExpression = "expression"
+	TypeLiteral    = "literal"
 )
 
 var (
@@ -51,8 +53,7 @@ func (e *Element) parse() error {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
 	switch {
-	case e.Type == TypeContent:
-	case e.Type == TypeBlock:
+	case e.Type == TypeContent || e.Type == TypeBlock || e.Type == TypeExpression || e.Type == TypeLiteral:
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -191,7 +192,7 @@ func (e *Element) AppendChild(child *Element) {
 // html writes the element's html to the buffer.
 func (e *Element) Html(bf *bytes.Buffer) error {
 	switch {
-	case e.Type == TypeContent:
+	case e.Type == TypeContent || e.Type == TypeExpression:
 		e.writeText(bf)
 		for _, child := range e.Children {
 			err := child.Html(bf)
@@ -199,6 +200,8 @@ func (e *Element) Html(bf *bytes.Buffer) error {
 				return err
 			}
 		}
+	case e.Type == TypeLiteral:
+		e.writeLiteralValue(bf)
 	case e.Type == TypeBlock:
 		if len(e.Tokens) < 2 {
 			return errors.New(fmt.Sprintf("The block element does not have a name. (line no: %d)", e.LineNo))
@@ -339,6 +342,10 @@ func (e *Element) setType() {
 		e.Type = TypeContent
 	case len(e.Tokens) > 0 && e.Tokens[0] == "block":
 		e.Type = TypeBlock
+	case len(e.Tokens) > 0 && e.Tokens[0] == "|":
+		e.Type = TypeLiteral
+	case expression(e.Text):
+		e.Type = TypeExpression
 	default:
 		e.Type = TypeTag
 	}
@@ -366,6 +373,19 @@ func (e *Element) getTemplate() *Template {
 	default:
 		return e.Template
 	}
+}
+
+// literalValue returns the element's literal value.
+func (e *Element) literalValue() string {
+	if len(e.Tokens) < 2 {
+		return ""
+	}
+	return strings.Join(e.Tokens[1:], " ")
+}
+
+// writeLiteralValue writes the element's literal value to the buffer.
+func (e *Element) writeLiteralValue(bf *bytes.Buffer) {
+	bf.WriteString(e.literalValue())
 }
 
 // NewElement generates a new element and returns it.
@@ -435,4 +455,9 @@ func parseValue(value string) string {
 // literal returns the string is a literal or not.
 func literal(s string) bool {
 	return len(s) > 1 && s[0] == unicodeDoubleQuote && s[len(s)-1] == unicodeDoubleQuote
+}
+
+// expression returns the string is an expression or not.
+func expression(s string) bool {
+	return strings.HasPrefix(s, "{{") && strings.HasSuffix(s, "}}")
 }
