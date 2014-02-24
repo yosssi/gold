@@ -211,3 +211,82 @@ func TestElementMultipleIdsError(t *testing.T) {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 }
+
+func TestElementAppendClassesFromToken(t *testing.T) {
+	e := &Element{Attributes: make(map[string]string)}
+	e.appendClassesFromToken("div.class1#id.class2")
+	if len(e.Classes) != 2 || e.Classes[0] != "class1" || e.Classes[1] != "class2" {
+		t.Errorf("The element's classes are invalid.")
+	}
+}
+
+func TestElementAppendClass(t *testing.T) {
+	// A class is "".
+	e := &Element{Attributes: make(map[string]string)}
+	e.appendClass("")
+	if len(e.Classes) != 0 {
+		t.Errorf("The element's classes are invalid.")
+	}
+
+	// A class is not "".
+	e = &Element{Attributes: make(map[string]string)}
+	e.appendClass("test")
+	if len(e.Classes) != 1 || e.Classes[0] != "test" {
+		t.Errorf("The element's classes are invalid.")
+	}
+}
+
+func TestElementAppendTextValue(t *testing.T) {
+	e := &Element{Attributes: make(map[string]string)}
+	e.appendTextValue("test")
+	if len(e.TextValues) != 1 || e.TextValues[0] != "test" {
+		t.Errorf("The element's text values are invalid.")
+	}
+}
+
+func TestElementAppendAttribute(t *testing.T) {
+	// When a token has no "=".
+	e := &Element{Attributes: make(map[string]string)}
+	e.appendAttribute("test")
+	if len(e.Attributes) != 0 {
+		t.Errorf("The element's attributes are invalid.")
+	}
+
+	// When a token has a "id=".
+	e = &Element{Attributes: make(map[string]string)}
+	e.appendAttribute("id=testid")
+	if e.Id != "testid" {
+		t.Errorf("The element's id is invalid.")
+	}
+
+	// When a token has a "class=".
+	e = &Element{Attributes: make(map[string]string)}
+	e.appendAttribute("class=testclass")
+	if len(e.Classes) != 1 || e.Classes[0] != "testclass" {
+		t.Errorf("The element's class is invalid.")
+	}
+
+	// When a token has an attribute.
+	e = &Element{Attributes: make(map[string]string)}
+	e.appendAttribute("data-test=testdata")
+	if len(e.Attributes) != 1 || e.Attributes["data-test"] != "testdata" {
+		t.Errorf("The element's attributes are invalid.")
+	}
+
+	// When a token has multiple  "="s.
+	e = &Element{Attributes: make(map[string]string)}
+	e.appendAttribute("data-test=testdata=testdata")
+	if len(e.Attributes) != 1 || e.Attributes["data-test"] != "testdata=testdata" {
+		t.Errorf("The element's attributes are invalid.")
+	}
+}
+
+func TestElementAppendChild(t *testing.T) {
+	e := &Element{Attributes: make(map[string]string)}
+	child := &Element{Attributes: make(map[string]string)}
+	e.AppendChild(child)
+	if len(e.Children) != 1 || e.Children[0] != child {
+		t.Errorf("The element's chilredn are invalid.")
+	}
+
+}
