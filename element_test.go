@@ -1,6 +1,7 @@
 package gold
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 )
@@ -288,4 +289,261 @@ func TestElementAppendChild(t *testing.T) {
 	if len(e.Children) != 1 || e.Children[0] != child {
 		t.Errorf("The element's chilredn are invalid.")
 	}
+}
+
+func TestElementHtml(t *testing.T) {
+	// When the element's type is expression and child.Html returns an error.
+	parent, err := NewElement("{{}}", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	child, err := NewElement("block", 2, 1, parent, nil, nil)
+	parent.AppendChild(child)
+	var bf bytes.Buffer
+	expectedErrMsg := fmt.Sprintf("The block element does not have a name. (line no: %d)", child.LineNo)
+	if err := parent.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is literal.
+	e, err := NewElement("| abc", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	if bf.String() != "abc" {
+		t.Errorf("Html output is invalid.")
+	}
+
+	// When the element's type is block and the template's sub is nil.
+	tpl := &Template{}
+	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	expectedErrMsg = "The template does not have a sub template."
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is block and the template's sub's block is nil.
+	tpl = &Template{Sub: &Template{Blocks: make(map[string]*Block)}}
+	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	expectedErrMsg = fmt.Sprintf("The sub template does not have the %s block.", e.Tokens[1])
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is block.
+	block := &Block{Name: "test"}
+	blockElement, err := NewElement("div#id.class attr=val This is a text.", 1, 0, nil, nil, block)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	block.AppendChild(blockElement)
+	tpl = &Template{Sub: &Template{Blocks: map[string]*Block{"test": block}}}
+	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	expectedString := `<div id="id" class="class" attr="val">This is a text.</div>`
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+
+	// When the element's type is tag and child.Html returns an error.
+	e, err = NewElement("p This is a text.", 1, 0, nil, nil, nil)
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	child, err = NewElement("block", 2, 1, e, nil, nil)
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	e.AppendChild(child)
+	bf = bytes.Buffer{}
+	expectedErrMsg = fmt.Sprintf("The block element does not have a name. (line no: %d)", child.LineNo)
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is tag and child.Html returns an error.
+	e, err = NewElement("div.class", 1, 0, nil, nil, nil)
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	child, err = NewElement("p This is a text.", 2, 1, e, nil, nil)
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	e.AppendChild(child)
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	expectedString = `<div class="class"><p>This is a text.</p></div>`
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+}
+
+func TestElementWriteOpenTag(t *testing.T) {
+	// When element's tag is doctype and a text value is html.
+	e, err := NewElement("doctype html", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf := bytes.Buffer{}
+	e.writeOpenTag(&bf)
+	expectedString := `<!DOCTYPE html>`
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+
+	// When element's tag is doctype and the element has a custom text value.
+	e, err = NewElement("doctype AABBCC", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	e.writeOpenTag(&bf)
+	expectedString = `<!DOCTYPE AABBCC>`
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+
+	// When element's tag is doctype and the element has a custom text value.
+	e, err = NewElement("div#id.class attr=val AAABBBCCC", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	e.writeOpenTag(&bf)
+	expectedString = `<div id="id" class="class" attr="val">`
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+}
+
+func TestElementWriteText(t *testing.T) {
+	e := &Element{Text: "This is a text."}
+	bf := bytes.Buffer{}
+	e.writeText(&bf)
+	expectedString := "This is a text.\n"
+	if bf.String() != expectedString {
+		t.Errorf("Buffer stirng should be %s", expectedString)
+	}
+}
+
+func TestElementTextValue(t *testing.T) {
+	e := &Element{TextValues: []string{"a", "b", "c"}}
+	expectedString := "a b c"
+	if s := e.textValue(); s != expectedString {
+		t.Errorf("Returned stirng should be %s", expectedString)
+	}
+}
+
+func TestElementHasId(t *testing.T) {
+	// When the element's id is empty.
+	e := &Element{Id: ""}
+	if e.hasId() != false {
+		t.Errorf("hasId sholud return false.")
+	}
+
+	// When the element's id is not empty.
+	e = &Element{Id: "id"}
+	if e.hasId() != true {
+		t.Errorf("hasId sholud return true.")
+	}
+}
+
+func TestElementWriteId(t *testing.T) {
+	e := &Element{Id: "id"}
+	var bf bytes.Buffer
+	e.writeId(&bf)
+	expectedString := ` id="id"`
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+}
+
+func TestElementHasClasses(t *testing.T) {
+	// When the element has no classes.
+	e := &Element{}
+	if e.hasClasses() != false {
+		t.Errorf("Return value should be false.")
+	}
+
+	// When the element has classes.
+	e = &Element{Classes: []string{"a"}}
+	if e.hasClasses() != true {
+		t.Errorf("Return value should be false.")
+	}
+}
+
+func TestElementWriteClasses(t *testing.T) {
+	e := &Element{Classes: []string{"a", "b"}}
+	var bf bytes.Buffer
+	e.writeClasses(&bf)
+	expectedString := ` class="a b"`
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+}
+
+func TestElementHasAttributes(t *testing.T) {
+	// When the element has no attributes.
+	e := &Element{}
+	if e.hasAttributes() != false {
+		t.Errorf("Return value should be false.")
+	}
+
+	// When the element has classes.
+	e = &Element{Attributes: map[string]string{"a": "b"}}
+	if e.hasAttributes() != true {
+		t.Errorf("Return value should be false.")
+	}
+}
+
+func TestElementWriteAttributes(t *testing.T) {
+	e := &Element{Attributes: map[string]string{"a": "b"}}
+	var bf bytes.Buffer
+	e.writeAttributes(&bf)
+	expectedString := ` a="b"`
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+}
+
+func TestElementWriteTextValue(t *testing.T) {
+	// When the element's tag is doctype.
+	e := &Element{Tag: "doctype", TextValues: []string{"a", "b"}}
+	var bf bytes.Buffer
+	e.writeTextValue(&bf)
+	expectedString := ``
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+
+	// When the element's tag is not doctype.
+	e = &Element{Tag: "div", TextValues: []string{"a", "b"}}
+	bf = bytes.Buffer{}
+	e.writeTextValue(&bf)
+	expectedString = `a b`
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+
 }
