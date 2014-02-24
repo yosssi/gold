@@ -288,5 +288,4 @@ func TestElementAppendChild(t *testing.T) {
 	if len(e.Children) != 1 || e.Children[0] != child {
 		t.Errorf("The element's chilredn are invalid.")
 	}
-
 }
