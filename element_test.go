@@ -545,5 +545,24 @@ func TestElementWriteTextValue(t *testing.T) {
 	if bf.String() != expectedString {
 		t.Errorf("Return string should be %s", expectedString)
 	}
+}
 
+func TestCloseTag(t *testing.T) {
+	// When the element's tag is doctype.
+	e := &Element{Tag: "doctype"}
+	var bf bytes.Buffer
+	e.writeCloseTag(&bf)
+	expectedString := ``
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
+
+	// When the element's tag is not doctype.
+	e = &Element{Tag: "div"}
+	bf = bytes.Buffer{}
+	e.writeCloseTag(&bf)
+	expectedString = `</div>`
+	if bf.String() != expectedString {
+		t.Errorf("Return string should be %s", expectedString)
+	}
 }
