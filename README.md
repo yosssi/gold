@@ -27,8 +27,8 @@ html lang=en
 			alert(msg);
 ```
 
-
 becomes
+
 
 ```html
 <!DOCTYPE html>
