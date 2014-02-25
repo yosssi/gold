@@ -36,14 +36,14 @@ func TestElementParse(t *testing.T) {
 		t.Errorf("Error(%s) occurred.", err.Error())
 	}
 
-	// When an element's type is TypeExpression.
+	// When an element's type is TypeLiteral.
 	e = &Element{Tokens: []string{"test"}, Type: TypeLiteral}
 	err = e.parse()
 	if err != nil {
 		t.Errorf("Error(%s) occurred.", err.Error())
 	}
 
-	// When an element's type is TypeExpression.
+	// When an element's type is TypeTag.
 	e, err = NewElement("div data-test=test test test2", 1, 0, nil, nil, nil)
 	if err != nil {
 		t.Errorf("Error(%s) occurred.", err.Error())
@@ -397,6 +397,43 @@ func TestElementHtml(t *testing.T) {
 	if bf.String() != expectedString {
 		t.Errorf("Buffer stirng should be %s", expectedString)
 	}
+
+	// When the element's type is include and tokens' length < 2.
+	e, err = NewElement("include", 1, 0, nil, nil, nil)
+	expectedErrMsg = fmt.Sprintf("The include element does not have a path. (line no: %d)", e.LineNo)
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is include and g.Parse returns an error.
+	g := NewGenerator(false)
+	tpl = NewTemplate("path", g)
+	e, err = NewElement("include ./somepath/somefile", 1, 0, nil, tpl, nil)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "open ././somepath/somefile.gold: no such file or directory"
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is include and incTpl.Html returns an error.
+	g = NewGenerator(false)
+	tpl = NewTemplate("./test/TestElementHtml/somefile.gold", g)
+	e, err = NewElement("include ./001", 1, 0, nil, tpl, nil)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "The block element does not have a name. (line no: 1)"
+	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is include.
+	g = NewGenerator(false)
+	tpl = NewTemplate("./test/TestElementHtml/somefile.gold", g)
+	e, err = NewElement("include ./002", 1, 0, nil, tpl, nil)
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+
 }
 
 func TestElementWriteOpenTag(t *testing.T) {
@@ -610,6 +647,13 @@ func TestElementSetType(t *testing.T) {
 	e.setType()
 	if e.Type != TypeTag {
 		t.Errorf("Type should be %s", TypeTag)
+	}
+
+	// When the element's text is an include element.
+	e = &Element{Tokens: []string{"include"}}
+	e.setType()
+	if e.Type != TypeInclude {
+		t.Errorf("Type should be %s", TypeInclude)
 	}
 }
 

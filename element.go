@@ -13,6 +13,7 @@ const (
 	TypeBlock      = "block"
 	TypeExpression = "expression"
 	TypeLiteral    = "literal"
+	TypeInclude    = "include"
 )
 
 var (
@@ -53,7 +54,7 @@ func (e *Element) parse() error {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
 	switch {
-	case e.Type == TypeContent || e.Type == TypeBlock || e.Type == TypeExpression || e.Type == TypeLiteral || e.comment():
+	case e.Type == TypeContent || e.Type == TypeBlock || e.Type == TypeExpression || e.Type == TypeLiteral || e.Type == TypeInclude || e.comment():
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -215,6 +216,21 @@ func (e *Element) Html(bf *bytes.Buffer) error {
 			return errors.New(fmt.Sprintf("The sub template does not have the %s block.", name))
 		}
 		block.Html(bf)
+	case e.Type == TypeInclude:
+		if len(e.Tokens) < 2 {
+			return errors.New(fmt.Sprintf("The include element does not have a path. (line no: %d)", e.LineNo))
+		}
+		tpl := e.getTemplate()
+		g := tpl.Generator
+		incTpl, err := g.Parse(tpl.Dir() + e.Tokens[1] + goldExtension)
+		if err != nil {
+			return err
+		}
+		incHtml, err := incTpl.Html()
+		if err != nil {
+			return err
+		}
+		bf.WriteString(incHtml)
 	default:
 		e.writeOpenTag(bf)
 		if e.hasTextValues() {
@@ -341,6 +357,8 @@ func (e *Element) setType() {
 		e.Type = TypeContent
 	case len(e.Tokens) > 0 && e.Tokens[0] == "block":
 		e.Type = TypeBlock
+	case len(e.Tokens) > 0 && e.Tokens[0] == "include":
+		e.Type = TypeInclude
 	case len(e.Tokens) > 0 && e.Tokens[0] == "|":
 		e.Type = TypeLiteral
 	case expression(e.Text):
