@@ -51,3 +51,32 @@ becomes
 	</body>
 </html>
 ```
+
+## Implementation Example
+
+```go
+package main
+
+import (
+	"github.com/yosssi/gold"
+	"net/http"
+)
+
+var g = gold.NewGenerator(false)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	tpl, err := g.ParseFile("./top.gold")
+	if err != nil {
+		panic(err)
+	}
+	data := map[string]interface{}{"Title": "Gold"}
+	if err := tpl.Execute(w, data); err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
+}
+```
