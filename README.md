@@ -9,5 +9,45 @@ Gold is a template engine for [Golang](http://golang.org/). This simplifies HTML
 ## Example
 
 ```gold
+doctype html
+html lang=en
+	head
+		title {{.Title}}
+	body
+		h1 Gold - Template engine for Golang
+		#container.wrapper
+			{{if true}}
+				p You can use an expression of Golang html/template package in a Gold template.
+			{{end}}
+			p.
+				Gold is a template engine for Golang.
+				This simplifies HTML coding in Golang web application development.
+		javascript:
+			msg = 'Welcome to Gold!';
+			alert(msg);
+```
 
+becomes
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Gold</title>
+	</head>
+	<body>
+		<h1>Gold - Template engine for Golang</h1>
+		<div id="container" class="wrapper">
+			<p>You can use an expression of Golang html/template package in a Gold template.</p>
+			<p>
+				Gold is a template engine for Golang.
+				This simplifies HTML coding in Golang web application development.
+			</p>
+		</div>
+		<script type="text/javascript">
+			msg = 'Welcome to Gold!';
+			alert(msg);
+		</script>
+	</body>
+</html>
 ```
