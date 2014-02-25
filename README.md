@@ -360,3 +360,7 @@ div
 ## Docs
 
 * [GoDoc](http://godoc.org/github.com/yosssi/gold)
+
+## Syntax Highlighting
+
+* [vim-gold](https://github.com/yosssi/vim-gold)
