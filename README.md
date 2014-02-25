@@ -29,7 +29,6 @@ html lang=en
 
 becomes
 
-
 ```html
 <!DOCTYPE html>
 <html lang="en">
