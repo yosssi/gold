@@ -287,7 +287,7 @@ becomes
 
 ### Includes
 
-Following gold template includes `./index.gold`.
+Following Gold template includes `./index.gold`.
 
 ```gold
 p Hello Gold
@@ -296,7 +296,7 @@ include ./index
 
 ### Inheritance
 
-A Gold tamplate can inherit other Gold templates as below:
+Gold tamplates can inherit other Gold templates as below:
 
 parent.gold
 
@@ -340,6 +340,21 @@ the above Gold templates generate the following HTML:
 		</footer>
 	</body>
 </html>
+```
+
+### Expressions
+
+You can embed [html/template](http://golang.org/pkg/html/template/) package's expressions into Gold templates because Gold template wraps Template of Golang html/template package. [text/template package's documentation](http://golang.org/pkg/text/template/) describes expressions in detail.
+
+```gold
+div
+	{{if .IsProduction}}
+		p This is a production code.
+	{{end}}
+div
+	{{range .Rows}}
+		p {{.}}
+	{{end}}
 ```
 
 ## APIs
