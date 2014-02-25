@@ -70,7 +70,7 @@ var g = gold.NewGenerator(false)
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// ParseFile parses a Gold templates and
-	// returns a html/template package's template.
+	// returns an html/template package's template.
 	tpl, err := g.ParseFile("./top.gold")
 
 	if err != nil {
@@ -135,6 +135,21 @@ becomes
 	You can insert
 	multiple texts.
 </p>
+```
+
+### Adding Attributes to Tags
+
+```gold
+a href=https://github.com/yosssi/gold target=_blank Gold GitHub Page
+button data-action=btnaction style="font-weight: bold; font-size: 1rem;"
+  | This is a button
+```
+
+becomes
+
+```html
+<a href="https://github.com/yosssi/gold" target="_blank">Gold GitHub Page</a>
+<button data-action="btnaction" style="font-weight: bold; font-size: 1rem;">This is a button</button>
 ```
 
 ## APIs
