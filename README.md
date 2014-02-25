@@ -80,3 +80,48 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 ```
+
+## Syntax
+
+### Creating Simple Tags
+
+```gold
+div
+	address
+	i
+	strong
+```
+
+becomes
+
+```html
+<div>
+	<address></address>
+	<i></i>
+	<strong></strong>
+</div>
+```
+
+### Putting Texts Inside Tags
+
+```gold
+p Welcome to Gold
+p
+	| You can insert single text.
+p.
+	You can insert
+	multiple texts.
+```
+
+becomes
+
+```html
+<p>Welcome to Gold</p>
+<p>You can insert single text.</p>
+<p>
+	You can insert
+	multiple texts.
+</p>
+```
+
+## APIs
