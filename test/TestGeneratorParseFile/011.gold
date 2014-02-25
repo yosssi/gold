@@ -1,0 +1,6 @@
+html
+	head
+	body
+		div#content#content2.content style="font-size: 1rem; font-weight: bold;"
+			p AAA
+			p BBB

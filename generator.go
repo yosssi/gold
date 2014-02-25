@@ -36,7 +36,6 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 		return nil, err
 	}
 	html, err := gtpl.Html()
-	fmt.Println(html)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +74,7 @@ func (g *Generator) Parse(path string) (*Template, error) {
 			case isExtends(line):
 				tokens := strings.Split(strings.TrimSpace(line), " ")
 				if l := len(tokens); l != extendsBlockTokensLen {
-					return nil, errors.New(fmt.Sprintf("The lien tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
+					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
 				}
 				superTpl, err := g.Parse(tpl.Dir() + tokens[1] + goldExtension)
 				if err != nil {
@@ -112,8 +111,8 @@ func (g *Generator) Parse(path string) (*Template, error) {
 }
 
 // NewGenerator generages a generator and returns it.
-func NewGenerator(cache bool) Generator {
-	return Generator{cache: cache, templates: make(map[string]*template.Template)}
+func NewGenerator(cache bool) *Generator {
+	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template)}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.
@@ -220,10 +219,10 @@ func appendChild(parent Container, line *string, indent *int, lines []string, i 
 
 // isExtends returns if the line's prefix is "extends" or not.
 func isExtends(line string) bool {
-	return strings.HasPrefix(line, "extends ")
+	return strings.HasPrefix(line, "extends ") || line == "extends"
 }
 
 // isBlock returns if the line's prefix is "block" or not.
 func isBlock(line string) bool {
-	return strings.HasPrefix(line, "block ")
+	return strings.HasPrefix(line, "block ") || line == "block"
 }
