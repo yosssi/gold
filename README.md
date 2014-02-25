@@ -148,9 +148,9 @@ doctype html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN"
 
 ```gold
 div
-	address
-	i
-	strong
+  address
+  i
+  strong
 ```
 
 becomes
@@ -168,10 +168,10 @@ becomes
 ```gold
 p Welcome to Gold
 p
-	| You can insert single text.
+  | You can insert single text.
 p.
-	You can insert
-	multiple texts.
+  You can insert
+  multiple texts.
 ```
 
 becomes
@@ -205,8 +205,8 @@ becomes
 ```gold
 h1#title.main-title Welcome to Gold
 #container
-	.wrapper
-		| Hello Gold
+  .wrapper
+    | Hello Gold
 ```
 
 becomes
@@ -222,12 +222,12 @@ becomes
 
 ```gold
 javascript:
-	alert(1);
-	alert(2);
+  alert(1);
+  alert(2);
 
 script type=text/javascript
-	alert(3);
-	alert(4);
+  alert(3);
+  alert(4);
 ```
 
 becomes
@@ -247,8 +247,8 @@ becomes
 
 ```gold
 style
-	h1 {color: red;}
-	p {color: blue;}
+  h1 {color: red;}
+  p {color: blue;}
 ```
 
 becomes
@@ -264,14 +264,14 @@ becomes
 
 ```gold
 div
-	p Hello Gold 1
-	// p Hello Gold 2
+  p Hello Gold 1
+  // p Hello Gold 2
 //
-	div
-		p Hello Gold 3
-		p Hello Gold 4
+  div
+    p Hello Gold 3
+    p Hello Gold 4
 div
-	p Hello Gold 5
+    p Hello Gold 5
 ```
 
 becomes
@@ -303,12 +303,12 @@ parent.gold
 ```gold
 doctype html
 html
-	head
-		title Gold
-	body
-		block content
-		footer
-			block footer
+  head
+    title Gold
+  body
+    block content
+    footer
+      block footer
 ```
 
 child.gold
@@ -317,12 +317,12 @@ child.gold
 extends ./parent
 
 block content
-	#container
-		| Hello Gold
+  #container
+    | Hello Gold
 
 block footer
-	.footer
-		| Copyright XXX
+  .footer
+    | Copyright XXX
 ```
 
 the above Gold templates generate the following HTML:
@@ -348,13 +348,13 @@ You can embed [text/template](http://golang.org/pkg/text/template/) package's ex
 
 ```gold
 div
-	{{if .IsProduction}}
-		p This is a production code.
-	{{end}}
+  {{if .IsProduction}}
+    p This is a production code.
+  {{end}}
 div
-	{{range .Rows}}
-		p {{.}}
-	{{end}}
+  {{range .Rows}}
+    p {{.}}
+  {{end}}
 ```
 
 ## Docs
