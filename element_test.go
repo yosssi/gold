@@ -547,7 +547,7 @@ func TestElementWriteTextValue(t *testing.T) {
 	}
 }
 
-func TestCloseTag(t *testing.T) {
+func TestElementCloseTag(t *testing.T) {
 	// When the element's tag is doctype.
 	e := &Element{Tag: "doctype"}
 	var bf bytes.Buffer
@@ -564,5 +564,227 @@ func TestCloseTag(t *testing.T) {
 	expectedString = `</div>`
 	if bf.String() != expectedString {
 		t.Errorf("Return string should be %s", expectedString)
+	}
+}
+
+func TestElementSetType(t *testing.T) {
+	// When the element's Parent.RawContent is true.
+	parent := &Element{RawContent: true}
+	e := &Element{Parent: parent}
+	e.setType()
+	if e.Type != TypeContent {
+		t.Errorf("Type should be %s", TypeContent)
+	}
+
+	// When the element's Parent.Type is TypeContent.
+	parent = &Element{Type: TypeContent}
+	e = &Element{Parent: parent}
+	e.setType()
+	if e.Type != TypeContent {
+		t.Errorf("Type should be %s", TypeContent)
+	}
+
+	// When the element's first token is block.
+	e = &Element{Tokens: []string{"block"}}
+	e.setType()
+	if e.Type != TypeBlock {
+		t.Errorf("Type should be %s", TypeBlock)
+	}
+
+	// When the element's first token is |.
+	e = &Element{Tokens: []string{"|"}}
+	e.setType()
+	if e.Type != TypeLiteral {
+		t.Errorf("Type should be %s", TypeLiteral)
+	}
+
+	// When the element's text is an expression.
+	e = &Element{Text: "{{.}}"}
+	e.setType()
+	if e.Type != TypeExpression {
+		t.Errorf("Type should be %s", TypeExpression)
+	}
+
+	// When the element's text is an tag element.
+	e = &Element{Text: "div"}
+	e.setType()
+	if e.Type != TypeTag {
+		t.Errorf("Type should be %s", TypeTag)
+	}
+}
+
+func TestElementGetBlock(t *testing.T) {
+	// When the element's parent has a block.
+	block := &Block{}
+	parent := &Element{Block: block}
+	e := &Element{Parent: parent}
+	if b := e.getBlock(); b != block {
+		t.Errorf("Returned block is invalid.")
+	}
+
+	// When the element has a block.
+	block = &Block{}
+	e = &Element{Block: block}
+	if b := e.getBlock(); b != block {
+		t.Errorf("Returned block is invalid.")
+	}
+
+	// When the element has no parents and blocks.
+	e = &Element{}
+	if b := e.getBlock(); b != nil {
+		t.Errorf("Returned value should be nil.")
+	}
+}
+
+func TestElementGetTemplate(t *testing.T) {
+	// When the element has a parent.
+	template := &Template{}
+	parent := &Element{Template: template}
+	e := &Element{Parent: parent}
+	if tpl := e.getTemplate(); tpl != template {
+		t.Errorf("Returned template is invalid.")
+	}
+
+	// When the element has a block.
+	template = &Template{}
+	block := &Block{Template: template}
+	e = &Element{Block: block}
+	if tpl := e.getTemplate(); tpl != template {
+		t.Errorf("Returned template is invalid.")
+	}
+
+	// When the element has a template.
+	template = &Template{}
+	e = &Element{Template: template}
+	if tpl := e.getTemplate(); tpl != template {
+		t.Errorf("Returned template is invalid.")
+	}
+}
+
+func TestElementLiteralValue(t *testing.T) {
+	// When the element's tokens' length is less than 2.
+	e := &Element{}
+	if e.literalValue() != "" {
+		t.Errorf("Returned value is invalid.")
+	}
+	// When the element's tokens' length is greater than or equal to 2.
+	e = &Element{Tokens: []string{"|", "a", "b"}}
+	if e.literalValue() != "a b" {
+		t.Errorf("Returned value is invalid.")
+	}
+}
+
+func TestElementWriteLiteralValue(t *testing.T) {
+	e := &Element{Tokens: []string{"|", "a", "b"}}
+	var bf bytes.Buffer
+	e.writeLiteralValue(&bf)
+	if bf.String() != "a b" {
+		t.Errorf("Return string is invalid.")
+	}
+}
+
+func TestNewElement(t *testing.T) {
+	// When an error occurs while parsing.
+	_, err := NewElement("div#id1#id2", 1, 0, nil, nil, nil)
+	expectedErrMsg := fmt.Sprintf("The number of the element id has to be one. (line no: %d)", 1)
+	if err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When an element is returned.
+	e, err := NewElement("div", 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	if e == nil || e.Tag != "div" {
+		t.Errorf("Returned value is invalid.")
+	}
+}
+
+func TestTokens(t *testing.T) {
+	// When a pair of double quotes exists.
+	text := `div attr="val1 val2" AAA`
+	tkns := tokens(text)
+	if len(tkns) != 3 || tkns[0] != "div" || tkns[1] != `attr="val1 val2"` || tkns[2] != "AAA" {
+		t.Errorf("Returned value is invalid.")
+	}
+
+	// When a double quote exists.
+	text = `div "AAA BBB`
+	tkns = tokens(text)
+	if len(tkns) != 3 || tkns[0] != "div" || tkns[1] != `"AAA` || tkns[2] != `BBB` {
+		t.Errorf("Returned value is invalid.")
+	}
+}
+
+func TestUnclosed(t *testing.T) {
+	// When the token is unclosed.
+	if unclosed(`aaa"bbb`) != true {
+		t.Errorf("Returned value should be true.")
+	}
+
+	// When the token is closed.
+	if unclosed(`aaa"bbb"`) != false {
+		t.Errorf("Returned value should be false.")
+	}
+}
+
+func TestClosed(t *testing.T) {
+	// When the token is closed.
+	if closed(`aaabbb"`) != true {
+		t.Errorf("Returned value should be true.")
+	}
+
+	// When the token is unclosed.
+	if closed("aaa") != false {
+		t.Errorf("Returned value should be false.")
+	}
+}
+
+func TestAttribute(t *testing.T) {
+	// When the token is an attribute.
+	if attribute("a=b") != true {
+		t.Errorf("Returned value should be true.")
+	}
+
+	// When the token is not an attribute.
+	if attribute("abc") != false {
+		t.Errorf("Returned value should be false.")
+	}
+}
+
+func TestParseValue(t *testing.T) {
+	// When the value is literal.
+	if parseValue(`"aaa"`) != "aaa" {
+		t.Errorf("Returned value is invalid.")
+	}
+
+	// When the value is not literal.
+	if parseValue("aaa") != "aaa" {
+		t.Errorf("Returned value is invalid.")
+	}
+}
+
+func TestLiteral(t *testing.T) {
+	// When the value is literal.
+	if literal(`"aaa"`) != true {
+		t.Errorf("Returned value should be true.")
+	}
+
+	// When the value is not literal.
+	if literal("aaa") != false {
+		t.Errorf("Returned value should be false.")
+	}
+}
+
+func TestExpression(t *testing.T) {
+	// When the value is expression.
+	if expression("{{.}}") != true {
+		t.Errorf("Returned value should be true.")
+	}
+
+	// When the value is not expression.
+	if expression("aaa") != false {
+		t.Errorf("Returned value should be false.")
 	}
 }
