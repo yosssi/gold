@@ -16,6 +16,7 @@ func (b *Block) AppendChild(child *Element) {
 	b.Elements = append(b.Elements, child)
 }
 
+// Html writes the block's html to the buffer.
 func (b *Block) Html(bf *bytes.Buffer) {
 	for _, e := range b.Elements {
 		e.Html(bf)
