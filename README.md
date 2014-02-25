@@ -96,6 +96,18 @@ func main() {
 
 ## Syntax
 
+### doctype
+
+```gold
+doctype html
+```
+
+becomes
+
+```html
+<!DOCTYPE html>
+```
+
 ### Creating Simple Tags
 
 ```gold
@@ -150,6 +162,24 @@ becomes
 ```html
 <a href="https://github.com/yosssi/gold" target="_blank">Gold GitHub Page</a>
 <button data-action="btnaction" style="font-weight: bold; font-size: 1rem;">This is a button</button>
+```
+
+### IDs and Classes
+
+```gold
+h1#title.main-title Welcome to Gold
+#container
+	.wrapper
+		| Hello Gold
+```
+
+becomes
+
+```html
+<h1 id="title" class="main-title">Welcome to Gold</h1>
+<div id="container">
+	<div class="wrapper">Hello Gold</div>
+</div>
 ```
 
 ## APIs
