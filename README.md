@@ -1,6 +1,5 @@
-gold
-====
+# gold - Go template engine
 
-Go template engine
+[![Build Status](https://drone.io/github.com/yosssi/gold/status.png)](https://drone.io/github.com/yosssi/gold/latest)
 
 
