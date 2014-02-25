@@ -1,9 +1,0 @@
-image: go1.2
-env:
-  - GOPATH=/var/cache/drone
-script:
-  - go test -cover
-notify:
-  email:
-    recipients:
-      - yoshida.keiji.84@gmail.com
