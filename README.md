@@ -17,7 +17,7 @@ html lang=en
 		h1 Gold - Template engine for Golang
 		#container.wrapper
 			{{if true}}
-				p You can use an expression of Golang html/template package in a Gold template.
+				p You can use an expression of Golang text/template package in a Gold template.
 			{{end}}
 			p.
 				Gold is a template engine for Golang.
