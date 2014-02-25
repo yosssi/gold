@@ -143,7 +143,7 @@ indentLoop:
 	return i
 }
 
-// empty returns if the string is empty.
+// empty returns if the string is empty or not.
 func empty(s string) bool {
 	return strings.TrimSpace(s) == ""
 }

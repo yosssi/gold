@@ -683,6 +683,20 @@ func TestElementWriteLiteralValue(t *testing.T) {
 	}
 }
 
+func TestElementComment(t *testing.T) {
+	// When the element is a comment.
+	e := &Element{Text: "//aaa"}
+	if e.comment() != true {
+		t.Errorf("Return value should be true.")
+	}
+
+	// When the element is not a comment.
+	e = &Element{Text: "aaa"}
+	if e.comment() != false {
+		t.Errorf("Return value should be true.")
+	}
+}
+
 func TestNewElement(t *testing.T) {
 	// When an error occurs while parsing.
 	_, err := NewElement("div#id1#id2", 1, 0, nil, nil, nil)
