@@ -81,7 +81,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// Call Execute method of the html/template
 	// package's template.
-	err := tpl.Execute(w, data)
+	err = tpl.Execute(w, data)
 	
 	if err != nil {
 		panic(err)
