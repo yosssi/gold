@@ -357,4 +357,6 @@ div
 	{{end}}
 ```
 
-## APIs
+## Docs
+
+* [GoDoc](http://godoc.org/github.com/yosssi/gold)
