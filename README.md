@@ -344,7 +344,7 @@ the above Gold templates generate the following HTML:
 
 ### Expressions
 
-You can embed [html/template](http://golang.org/pkg/html/template/) package's expressions into Gold templates because Gold template wraps Template of Golang html/template package. [text/template package's documentation](http://golang.org/pkg/text/template/) describes expressions in detail.
+You can embed [text/template](http://golang.org/pkg/text/template/) package's expressions into Gold templates because Gold template wraps this package's Template. [text/template](http://golang.org/pkg/text/template/) package's documentation describes its expressions in detail.
 
 ```gold
 div
