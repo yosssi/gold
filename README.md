@@ -251,12 +251,95 @@ style
 	p {color: blue;}
 ```
 
+becomes
 
 ```html
 <style>
 	h1 {color: red;}
 	p {color: blue;}
 </style>
+```
+
+### Comments
+
+```gold
+div
+	p Hello Gold 1
+	// p Hello Gold 2
+//
+	div
+		p Hello Gold 3
+		p Hello Gold 4
+div
+	p Hello Gold 5
+```
+
+becomes
+
+```html
+<div>
+	<p>Hello Gold 1</p>
+</div>
+<div>
+	<p>Hello Gold 5</p>
+</div>
+```
+
+### Includes
+
+Following gold template includes `./index.gold`.
+
+```gold
+p Hello Gold
+include ./index
+```
+
+### Inheritance
+
+A Gold tamplate can inherit other Gold templates as below:
+
+parent.gold
+
+```gold
+doctype html
+html
+	head
+		title Gold
+	body
+		block content
+		footer
+			block footer
+```
+
+child.gold
+
+```gold
+extends ./parent
+
+block content
+	#container
+		| Hello Gold
+
+block footer
+	.footer
+		| Copyright XXX
+```
+
+the above Gold templates generate the following HTML:
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Gold</title>
+	</head>
+	<body>
+		<div id="container">Hello Gold</div>
+		<footer>
+			<div class="footer">Copyright XXX</div>
+		</footer>
+	</body>
+</html>
 ```
 
 ## APIs
