@@ -218,4 +218,45 @@ becomes
 </div>
 ```
 
+### JavaScript
+
+```gold
+javascript:
+	alert(1);
+	alert(2);
+
+script type=text/javascript
+	alert(3);
+	alert(4);
+```
+
+becomes
+
+```html
+<script type="text/javascript">
+	alert(1);
+	alert(2);
+</script>
+<script type="text/javascript">
+	alert(3);
+	alert(4);
+</script>
+```
+
+### Style
+
+```gold
+style
+	h1 {color: red;}
+	p {color: blue;}
+```
+
+
+```html
+<style>
+	h1 {color: red;}
+	p {color: blue;}
+</style>
+```
+
 ## APIs
