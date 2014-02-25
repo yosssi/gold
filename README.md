@@ -62,15 +62,28 @@ import (
 	"net/http"
 )
 
+// Create a generator which parses a Gold templates and
+// returns a html/template package's template.
+// You can have a generator cache templates by passing
+// true to NewGenerator function.
 var g = gold.NewGenerator(false)
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	// ParseFile parses a Gold templates and
+	// returns a html/template package's template.
 	tpl, err := g.ParseFile("./top.gold")
+
 	if err != nil {
 		panic(err)
 	}
+
 	data := map[string]interface{}{"Title": "Gold"}
-	if err := tpl.Execute(w, data); err != nil {
+
+	// Call Execute method of the html/template
+	// package's template.
+	err := tpl.Execute(w, data)
+	
+	if err != nil {
 		panic(err)
 	}
 }
