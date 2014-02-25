@@ -69,7 +69,7 @@ import (
 var g = gold.NewGenerator(false)
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	// ParseFile parses a Gold templates and
+	// ParseFile parses a Gold template and
 	// returns an html/template package's template.
 	tpl, err := g.ParseFile("./top.gold")
 
