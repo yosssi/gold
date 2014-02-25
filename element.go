@@ -187,7 +187,7 @@ func (e *Element) AppendChild(child *Element) {
 	e.Children = append(e.Children, child)
 }
 
-// html writes the element's html to the buffer.
+// Html writes the element's html to the buffer.
 func (e *Element) Html(bf *bytes.Buffer) error {
 	switch {
 	case e.Type == TypeContent || e.Type == TypeExpression:
