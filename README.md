@@ -11,7 +11,7 @@ Gold is a template engine for [Golang](http://golang.org/). This simplifies HTML
 ```gold
 doctype html
 html lang=en
-	head
+  head
 		title {{.Title}}
 	body
 		h1 Gold - Template engine for Golang
