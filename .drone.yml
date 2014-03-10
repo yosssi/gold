@@ -2,7 +2,7 @@ image: yosssi/go:1.2
 env:
   - GOPATH=/var/cache/drone
 script:
-  - sudo apt-get install mercurial meld
+  - sudo apt-get install -y mercurial meld
   - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
   - goveralls -service drone.io -repotoken $COVERALLS_TOKEN
