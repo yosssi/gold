@@ -2,6 +2,8 @@ image: yosssi/go:1.2
 env:
   - GOPATH=/var/cache/drone
 script:
+  - export GOPATH=/var/cache/drone
+  - PATH=$PATH:$GOPATH/bin
   - curl -s -o mercurial-common.deb http://http.us.debian.org/debian/pool/main/m/mercurial/mercurial-common_2.9.1-1_all.deb
   - curl -s -o mercurial.deb http://http.us.debian.org/debian/pool/main/m/mercurial/mercurial_2.9.1-1_amd64.deb
   - sudo dpkg -i mercurial-common.deb
