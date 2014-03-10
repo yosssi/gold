@@ -11,3 +11,7 @@ script:
   - goveralls -service drone.io -repotoken $COVERALLS_TOKEN
 git:
   depth: 1
+notify:
+  email:
+    recipients:
+      - yoshida.keiji.84@gmail.com
