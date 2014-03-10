@@ -1,0 +1,9 @@
+image: yosssi/go:1.2
+env:
+  - GOPATH=/var/cache/drone
+script:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - goveralls -service drone.io -repotoken $COVERALLS_TOKEN
+git:
+  depth: 1
