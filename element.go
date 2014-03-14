@@ -368,18 +368,6 @@ func (e *Element) setType() {
 	}
 }
 
-// getBlock returns the element's block.
-func (e *Element) getBlock() *Block {
-	switch {
-	case e.Parent != nil:
-		return e.Parent.getBlock()
-	case e.Block != nil:
-		return e.Block
-	default:
-		return nil
-	}
-}
-
 // getTemplate returns the element's template.
 func (e *Element) getTemplate() *Template {
 	switch {

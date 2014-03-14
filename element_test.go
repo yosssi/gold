@@ -657,29 +657,6 @@ func TestElementSetType(t *testing.T) {
 	}
 }
 
-func TestElementGetBlock(t *testing.T) {
-	// When the element's parent has a block.
-	block := &Block{}
-	parent := &Element{Block: block}
-	e := &Element{Parent: parent}
-	if b := e.getBlock(); b != block {
-		t.Errorf("Returned block is invalid.")
-	}
-
-	// When the element has a block.
-	block = &Block{}
-	e = &Element{Block: block}
-	if b := e.getBlock(); b != block {
-		t.Errorf("Returned block is invalid.")
-	}
-
-	// When the element has no parents and blocks.
-	e = &Element{}
-	if b := e.getBlock(); b != nil {
-		t.Errorf("Returned value should be nil.")
-	}
-}
-
 func TestElementGetTemplate(t *testing.T) {
 	// When the element has a parent.
 	template := &Template{}
