@@ -2,7 +2,7 @@
 
 [![Build Status](http://128.199.249.74/github.com/yosssi/gold/status.png?branch=master)](http://128.199.249.74/github.com/yosssi/gold)
 [![Coverage Status](https://coveralls.io/repos/yosssi/gold/badge.png?branch=master)](https://coveralls.io/r/yosssi/gold?branch=master)
-[![GoDoc](https://godoc.org/github.com/yosssi/gold?status.png)](https://godoc.org/github.com/yosssi/gold)
+[![GoDoc](http://godoc.org/github.com/yosssi/gold?status.png)](http://godoc.org/github.com/yosssi/gold)
 
 Gold is a template engine for [Golang](http://golang.org/). This simplifies HTML coding in Golang web application development. This is influenced by [Slim](http://slim-lang.com/) and [Jade](http://jade-lang.com/).
 
