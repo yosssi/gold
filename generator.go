@@ -26,16 +26,26 @@ type Generator struct {
 
 // ParseFile parses a Gold template file and returns an HTML template.
 func (g *Generator) ParseFile(path string) (*template.Template, error) {
+	return g.generateTemplate(path, nil)
+}
+
+// ParseString parses a Gold template string and returns an HTML template.
+func (g *Generator) ParseString(stringTemplates map[string]string, name string) (*template.Template, error) {
+	return g.generateTemplate(name, stringTemplates)
+}
+
+// generateTemplate parses a Gold template and returns an HTML template.
+func (g *Generator) generateTemplate(path string, stringTemplates map[string]string) (*template.Template, error) {
 	if g.cache {
 		if tpl, prs := g.templates[path]; prs {
 			return tpl, nil
 		}
 	}
-	gtpl, err := g.Parse(path)
+	gtpl, err := g.parse(path, stringTemplates)
 	if err != nil {
 		return nil, err
 	}
-	html, err := gtpl.Html()
+	html, err := gtpl.Html(stringTemplates)
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +60,23 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 }
 
 // parse parses a Gold template file and returns a Gold template.
-func (g *Generator) Parse(path string) (*Template, error) {
+func (g *Generator) parse(path string, stringTemplates map[string]string) (*Template, error) {
 	if g.cache {
 		if tpl, prs := g.gtemplates[path]; prs {
 			return tpl, nil
 		}
 	}
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+	var s string
+	if stringTemplates == nil {
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		s = string(b)
+	} else {
+		s = stringTemplates[path]
 	}
-	lines := strings.Split(formatLf(string(b)), "\n")
+	lines := strings.Split(formatLf(s), "\n")
 	i, l := 0, len(lines)
 	tpl := NewTemplate(path, g)
 	for i < l {
@@ -76,7 +92,14 @@ func (g *Generator) Parse(path string) (*Template, error) {
 				if l := len(tokens); l != extendsBlockTokensLen {
 					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
 				}
-				superTpl, err := g.Parse(tpl.Dir() + tokens[1] + goldExtension)
+				superTplPath := tokens[1]
+				var superTpl *Template
+				var err error
+				if stringTemplates == nil {
+					superTpl, err = g.parse(tpl.Dir()+superTplPath+goldExtension, nil)
+				} else {
+					superTpl, err = g.parse(superTplPath, stringTemplates)
+				}
 				if err != nil {
 					return nil, err
 				}

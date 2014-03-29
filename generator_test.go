@@ -48,13 +48,46 @@ func TestGeneratorParseFile(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 }
+func TestGeneratorParseString(t *testing.T) {
+	g := &Generator{}
+	parent := `
+doctype html
+html
+  head
+    title Gold
+  body
+    block content
+    footer
+      block footer
+`
+	child := `
+extends parent
+
+block content
+  #container
+    | Hello Gold
+
+block footer
+  .footer
+    | Copyright XXX
+	include inc
+`
+	inc := `
+p This is an included line.
+`
+	stringTemplates := map[string]string{"parent": parent, "child": child, "inc": inc}
+	_, err := g.ParseString(stringTemplates, "child")
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+}
 
 func TestParse(t *testing.T) {
 	// When cache is true and Parse returns a cached template.
 	gtmplt := &Template{}
 	g := NewGenerator(true)
 	g.gtemplates = map[string]*Template{"path": gtmplt}
-	gtpl, err := g.Parse("path")
+	gtpl, err := g.parse("path", nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -65,7 +98,7 @@ func TestParse(t *testing.T) {
 	// When ioutil.ReadFile returns an error.
 	gtmplt = &Template{}
 	g = NewGenerator(false)
-	gtpl, err = g.Parse("./somepath/somefile")
+	gtpl, err = g.parse("./somepath/somefile", nil)
 	expectedErrMsg := "open ./somepath/somefile: no such file or directory"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)

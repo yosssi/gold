@@ -17,8 +17,8 @@ func (b *Block) AppendChild(child *Element) {
 }
 
 // Html writes the block's html to the buffer.
-func (b *Block) Html(bf *bytes.Buffer) {
+func (b *Block) Html(bf *bytes.Buffer, stringTemplates map[string]string) {
 	for _, e := range b.Elements {
-		e.Html(bf)
+		e.Html(bf, stringTemplates)
 	}
 }

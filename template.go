@@ -21,13 +21,13 @@ func (t *Template) AppendElement(e *Element) {
 }
 
 // Html generates an html and returns it.
-func (t *Template) Html() (string, error) {
+func (t *Template) Html(stringTemplates map[string]string) (string, error) {
 	if t.Super != nil {
-		return t.Super.Html()
+		return t.Super.Html(stringTemplates)
 	} else {
 		var bf bytes.Buffer
 		for _, e := range t.Elements {
-			err := e.Html(&bf)
+			err := e.Html(&bf, stringTemplates)
 			if err != nil {
 				return "", err
 			}

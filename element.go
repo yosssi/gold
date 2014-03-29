@@ -29,7 +29,7 @@ var (
 	}
 )
 
-// An Element represents an  element of a Gold template.
+// An Element represents an element of a Gold template.
 type Element struct {
 	Text       string
 	Tokens     []string
@@ -189,13 +189,13 @@ func (e *Element) AppendChild(child *Element) {
 }
 
 // Html writes the element's html to the buffer.
-func (e *Element) Html(bf *bytes.Buffer) error {
+func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) error {
 	switch {
 	case e.comment():
 	case e.Type == TypeContent || e.Type == TypeExpression:
 		e.writeText(bf)
 		for _, child := range e.Children {
-			err := child.Html(bf)
+			err := child.Html(bf, stringTemplates)
 			if err != nil {
 				return err
 			}
@@ -215,18 +215,25 @@ func (e *Element) Html(bf *bytes.Buffer) error {
 		if block == nil {
 			return errors.New(fmt.Sprintf("The sub template does not have the %s block.", name))
 		}
-		block.Html(bf)
+		block.Html(bf, stringTemplates)
 	case e.Type == TypeInclude:
 		if len(e.Tokens) < 2 {
 			return errors.New(fmt.Sprintf("The include element does not have a path. (line no: %d)", e.LineNo))
 		}
 		tpl := e.getTemplate()
+		incTplPath := e.Tokens[1]
 		g := tpl.Generator
-		incTpl, err := g.Parse(tpl.Dir() + e.Tokens[1] + goldExtension)
+		var incTpl *Template
+		var err error
+		if stringTemplates == nil {
+			incTpl, err = g.parse(tpl.Dir()+incTplPath+goldExtension, nil)
+		} else {
+			incTpl, err = g.parse(incTplPath, stringTemplates)
+		}
 		if err != nil {
 			return err
 		}
-		incHtml, err := incTpl.Html()
+		incHtml, err := incTpl.Html(stringTemplates)
 		if err != nil {
 			return err
 		}
@@ -237,7 +244,7 @@ func (e *Element) Html(bf *bytes.Buffer) error {
 			e.writeTextValue(bf)
 		}
 		for _, child := range e.Children {
-			err := child.Html(bf)
+			err := child.Html(bf, stringTemplates)
 			if err != nil {
 				return err
 			}
