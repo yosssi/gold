@@ -21,7 +21,7 @@ func TestTemplateHtml(t *testing.T) {
 	}
 	super.AppendElement(e)
 	tpl := &Template{Super: super}
-	s, err := tpl.Html()
+	s, err := tpl.Html(nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}

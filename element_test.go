@@ -301,7 +301,7 @@ func TestElementHtml(t *testing.T) {
 	parent.AppendChild(child)
 	var bf bytes.Buffer
 	expectedErrMsg := fmt.Sprintf("The block element does not have a name. (line no: %d)", child.LineNo)
-	if err := parent.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := parent.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -311,7 +311,7 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	bf = bytes.Buffer{}
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	if bf.String() != "abc" {
@@ -326,7 +326,7 @@ func TestElementHtml(t *testing.T) {
 	}
 	bf = bytes.Buffer{}
 	expectedErrMsg = "The template does not have a sub template."
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -338,7 +338,7 @@ func TestElementHtml(t *testing.T) {
 	}
 	bf = bytes.Buffer{}
 	expectedErrMsg = fmt.Sprintf("The sub template does not have the %s block.", e.Tokens[1])
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -355,7 +355,7 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	bf = bytes.Buffer{}
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	expectedString := `<div id="id" class="class" attr="val">This is a text.</div>`
@@ -365,32 +365,32 @@ func TestElementHtml(t *testing.T) {
 
 	// When the element's type is tag and child.Html returns an error.
 	e, err = NewElement("p This is a text.", 1, 0, nil, nil, nil)
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	child, err = NewElement("block", 2, 1, e, nil, nil)
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	e.AppendChild(child)
 	bf = bytes.Buffer{}
 	expectedErrMsg = fmt.Sprintf("The block element does not have a name. (line no: %d)", child.LineNo)
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
 	// When the element's type is tag and child.Html returns an error.
 	e, err = NewElement("div.class", 1, 0, nil, nil, nil)
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	child, err = NewElement("p This is a text.", 2, 1, e, nil, nil)
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	e.AppendChild(child)
 	bf = bytes.Buffer{}
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	expectedString = `<div class="class"><p>This is a text.</p></div>`
@@ -401,7 +401,7 @@ func TestElementHtml(t *testing.T) {
 	// When the element's type is include and tokens' length < 2.
 	e, err = NewElement("include", 1, 0, nil, nil, nil)
 	expectedErrMsg = fmt.Sprintf("The include element does not have a path. (line no: %d)", e.LineNo)
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -411,7 +411,7 @@ func TestElementHtml(t *testing.T) {
 	e, err = NewElement("include ./somepath/somefile", 1, 0, nil, tpl, nil)
 	bf = bytes.Buffer{}
 	expectedErrMsg = "open ././somepath/somefile.gold: no such file or directory"
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -421,7 +421,7 @@ func TestElementHtml(t *testing.T) {
 	e, err = NewElement("include ./001", 1, 0, nil, tpl, nil)
 	bf = bytes.Buffer{}
 	expectedErrMsg = "The block element does not have a name. (line no: 1)"
-	if err := e.Html(&bf); err == nil || err.Error() != expectedErrMsg {
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
@@ -430,7 +430,7 @@ func TestElementHtml(t *testing.T) {
 	tpl = NewTemplate("./test/TestElementHtml/somefile.gold", g)
 	e, err = NewElement("include ./002", 1, 0, nil, tpl, nil)
 	bf = bytes.Buffer{}
-	if err := e.Html(&bf); err != nil {
+	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 

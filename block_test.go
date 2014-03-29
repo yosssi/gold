@@ -22,7 +22,7 @@ func TestBlockHtml(t *testing.T) {
 	}
 	b.AppendChild(e)
 	var bf bytes.Buffer
-	b.Html(&bf)
+	b.Html(&bf, nil)
 	if bf.String() != `<div id="id" class="class" attr="val">This is a text.</div>` {
 		t.Errorf("Html returns an invalid string.")
 	}

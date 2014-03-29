@@ -1,10 +1,10 @@
-# Gold - Template engine for Golang
+# Gold - Template engine for Go
 
 [![Build Status](http://128.199.249.74/github.com/yosssi/gold/status.png?branch=master)](http://128.199.249.74/github.com/yosssi/gold)
 [![Coverage Status](https://coveralls.io/repos/yosssi/gold/badge.png?branch=master)](https://coveralls.io/r/yosssi/gold?branch=master)
 [![GoDoc](http://godoc.org/github.com/yosssi/gold?status.png)](http://godoc.org/github.com/yosssi/gold)
 
-Gold is a template engine for [Golang](http://golang.org/). This simplifies HTML coding in Golang web application development. This is influenced by [Slim](http://slim-lang.com/) and [Jade](http://jade-lang.com/).
+Gold is a template engine for [Go](http://golang.org/). This simplifies HTML coding in Go web application development. This is influenced by [Slim](http://slim-lang.com/) and [Jade](http://jade-lang.com/).
 
 ## Example
 
@@ -14,14 +14,14 @@ html lang=en
   head
     title {{.Title}}
   body
-    h1 Gold - Template engine for Golang
+    h1 Gold - Template engine for Go
     #container.wrapper
       {{if true}}
-        p You can use an expression of Golang text/template package in a Gold template.
+        p You can use an expression of Go text/template package in a Gold template.
       {{end}}
       p.
-        Gold is a template engine for Golang.
-        This simplifies HTML coding in Golang web application development.
+        Gold is a template engine for Go.
+        This simplifies HTML coding in Go web application development.
     javascript:
       msg = 'Welcome to Gold!';
       alert(msg);
@@ -36,12 +36,12 @@ becomes
 		<title>Gold</title>
 	</head>
 	<body>
-		<h1>Gold - Template engine for Golang</h1>
+		<h1>Gold - Template engine for Go</h1>
 		<div id="container" class="wrapper">
-			<p>You can use an expression of Golang html/template package in a Gold template.</p>
+			<p>You can use an expression of Go html/template package in a Gold template.</p>
 			<p>
-				Gold is a template engine for Golang.
-				This simplifies HTML coding in Golang web application development.
+				Gold is a template engine for Go.
+				This simplifies HTML coding in Go web application development.
 			</p>
 		</div>
 		<script type="text/javascript">
@@ -355,6 +355,77 @@ div
   {{range .Rows}}
     p {{.}}
   {{end}}
+```
+
+### Parse template strings
+
+You can parse template strings and load templates from memory by using the generator's `ParseString` method.
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"github.com/yosssi/gold"
+)
+
+// Create a generator which parses a Gold templates and
+// returns a html/template package's template.
+// You can have a generator cache templates by passing
+// true to NewGenerator function.
+var g = gold.NewGenerator(true)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+
+	// template strings
+	parent := `
+doctype html
+html
+  head
+    title Gold
+  body
+    block content
+    footer
+      block footer
+`
+	child := `
+extends parent
+
+block content
+  #container
+    | Hello Gold
+
+block footer
+  .footer
+    | Copyright XXX
+`
+
+	stringTemplates := map[string]string{"parent": parent, "child": child}
+
+	// ParseString parses a Gold template strings and
+	// returns an html/template package's template.
+	tpl, err := g.ParseString(stringTemplates, "child")
+
+	if err != nil {
+		panic(err)
+	}
+
+	data := map[string]interface{}{"Title": "Gold"}
+
+	// Call Execute method of the html/template
+	// package's template.
+	err = tpl.Execute(w, data)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
+}
 ```
 
 ## Docs
