@@ -57,7 +57,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	}
 	tpl := template.New(path)
 	tpl.Funcs(g.helperFuncs)
-	tpl.Parse(html)
+	_, err = tpl.Parse(html)
 	if err != nil {
 		return nil, err
 	}
