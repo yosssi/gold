@@ -19,14 +19,20 @@ const (
 
 // A generator represents an HTML generator.
 type Generator struct {
-	cache      bool
-	templates  map[string]*template.Template
-	gtemplates map[string]*Template
+	cache       bool
+	templates   map[string]*template.Template
+	gtemplates  map[string]*Template
+	helperFuncs template.FuncMap
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
 func (g *Generator) ParseFile(path string) (*template.Template, error) {
 	return g.generateTemplate(path, nil)
+}
+
+//Set Helpers
+func (g *Generator) SetHelpers(helperFuncs template.FuncMap) {
+	g.helperFuncs = helperFuncs
 }
 
 // ParseString parses a Gold template string and returns an HTML template.
@@ -49,7 +55,9 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	if err != nil {
 		return nil, err
 	}
-	tpl, err := template.New(path).Parse(html)
+	tpl := template.New(path)
+	tpl.Funcs(g.helperFuncs)
+	_, err = tpl.Parse(html)
 	if err != nil {
 		return nil, err
 	}
