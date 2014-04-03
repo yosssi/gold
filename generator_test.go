@@ -2,6 +2,7 @@ package gold
 
 import (
 	"html/template"
+	"strings"
 	"testing"
 )
 
@@ -406,4 +407,9 @@ func TestIsBlock(t *testing.T) {
 	if isBlock("aaa") != false {
 		t.Errorf("Return value is invalid.")
 	}
+}
+
+func TestGeneratorSetHelpers(t *testing.T) {
+	g := NewGenerator(false)
+	g.SetHelpers(template.FuncMap{"title": strings.Title})
 }
