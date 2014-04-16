@@ -275,10 +275,9 @@ func TestAppendChildren(t *testing.T) {
 	// parentType is TypeBlock and indent >= parentIndent+1
 	i = 0
 	l = 1
-	err = appendChildren(nil, []string{"  a"}, &i, &l, 0, false, TypeBlock)
-	expectedErrMsg = "The indent of the line 1 is invalid. Block element can not have child elements."
-	if err == nil || err.Error() != expectedErrMsg {
-		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	err = appendChildren(e, []string{"  a"}, &i, &l, 0, false, TypeBlock)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
 	// parentType is TypeTag and indent < parentIndent+1

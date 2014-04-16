@@ -203,13 +203,6 @@ func appendChildren(parent Container, lines []string, i *int, l *int, parentInde
 					return err
 				}
 			}
-		case parentType == TypeBlock:
-			switch {
-			case indent < parentIndent+1:
-				return nil
-			default:
-				return errors.New(fmt.Sprintf("The indent of the line %d is invalid. Block element can not have child elements.", *i+1))
-			}
 		default:
 			switch {
 			case indent < parentIndent+1:
