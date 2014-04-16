@@ -326,8 +326,8 @@ func TestElementHtml(t *testing.T) {
 	}
 	bf = bytes.Buffer{}
 	expectedErrMsg = "The template does not have a sub template."
-	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
-		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	if err := e.Html(&bf, nil); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
 	// When the element's type is block and the template's sub's block is nil.
@@ -337,9 +337,8 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	bf = bytes.Buffer{}
-	expectedErrMsg = fmt.Sprintf("The sub template does not have the %s block.", e.Tokens[1])
-	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
-		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	if err := e.Html(&bf, nil); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
 	// When the element's type is block.
@@ -434,6 +433,37 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
+	// When the block's sub template does not exist and an error occurs.
+	g = NewGenerator(false)
+	tpl = NewTemplate("./test/TestElementHtml/003.gold", g)
+	parent, err = NewElement("block test", 1, 0, nil, tpl, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	child, err = NewElement("block", 2, 1, parent, tpl, nil)
+	parent.AppendChild(child)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "The block element does not have a name. (line no: 2)"
+	if err := parent.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the block's sub template exists and an error occurs.
+	g = NewGenerator(false)
+	parentTpl := NewTemplate("./test/TestElementHtml/003.gold", g)
+	subTpl := NewTemplate("./test/TestElementHtml/003.gold", g)
+	parentTpl.Sub = subTpl
+	parent, err = NewElement("block test", 1, 0, nil, parentTpl, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	child, err = NewElement("block", 2, 1, parent, parentTpl, nil)
+	parent.AppendChild(child)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "The block element does not have a name. (line no: 2)"
+	if err := parent.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
 }
 
 func TestElementWriteOpenTag(t *testing.T) {

@@ -209,11 +209,17 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 		name := e.Tokens[1]
 		sub := e.getTemplate().Sub
 		if sub == nil {
-			return errors.New(fmt.Sprintf("The template does not have a sub template."))
+			if err := e.writeChildren(bf, stringTemplates); err != nil {
+				return err
+			}
+			return nil
 		}
 		block := sub.Blocks[name]
 		if block == nil {
-			return errors.New(fmt.Sprintf("The sub template does not have the %s block.", name))
+			if err := e.writeChildren(bf, stringTemplates); err != nil {
+				return err
+			}
+			return nil
 		}
 		block.Html(bf, stringTemplates)
 	case e.Type == TypeInclude:
@@ -243,13 +249,21 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 		if e.hasTextValues() {
 			e.writeTextValue(bf)
 		}
-		for _, child := range e.Children {
-			err := child.Html(bf, stringTemplates)
-			if err != nil {
-				return err
-			}
+		if err := e.writeChildren(bf, stringTemplates); err != nil {
+			return err
 		}
 		e.writeCloseTag(bf)
+	}
+	return nil
+}
+
+// writeChildren writes the element's children's HTML.
+func (e *Element) writeChildren(bf *bytes.Buffer, stringTemplates map[string]string) error {
+	for _, child := range e.Children {
+		err := child.Html(bf, stringTemplates)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

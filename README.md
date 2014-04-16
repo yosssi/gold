@@ -341,6 +341,58 @@ the above Gold templates generate the following HTML:
 </html>
 ```
 
+### Optional Blocks
+
+You can set a default value to the blocks as below:
+
+parent.gold
+
+```gold
+doctype html
+html
+  head
+    block title
+      title Default Title
+```
+
+child1.gold
+
+```gold
+extends ./parent
+
+block title
+  title Child1 Title
+```
+
+child2.gold
+
+```gold
+extends ./parent
+```
+
+child1.gold template generates the following HTML:
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Child1 Title</title>
+	</head>
+</html>
+```
+
+child2.gold template generates the following HTML:
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Default Title</title>
+	</head>
+</html>
+```
+
+
 ### Expressions
 
 You can embed [text/template](http://golang.org/pkg/text/template/) package's expressions into Gold templates because Gold template wraps this package's Template. [text/template](http://golang.org/pkg/text/template/) package's documentation describes its expressions in detail.
