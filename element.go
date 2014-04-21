@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	TypeTag        = "tag"
-	TypeContent    = "content"
-	TypeBlock      = "block"
-	TypeExpression = "expression"
-	TypeLiteral    = "literal"
-	TypeInclude    = "include"
+	TypeTag              = "tag"
+	TypeContent          = "content"
+	TypeBlock            = "block"
+	TypeExpression       = "expression"
+	TypeLiteral          = "literal"
+	TypeInclude          = "include"
+	TypeOutputExpression = "outputExpression"
 )
 
 var (
@@ -54,7 +55,7 @@ func (e *Element) parse() error {
 		return errors.New(fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo))
 	}
 	switch {
-	case e.Type == TypeContent || e.Type == TypeBlock || e.Type == TypeExpression || e.Type == TypeLiteral || e.Type == TypeInclude || e.comment():
+	case e.Type == TypeContent || e.Type == TypeBlock || e.Type == TypeExpression || e.Type == TypeLiteral || e.Type == TypeInclude || e.Type == TypeOutputExpression || e.comment():
 	default:
 		for i, token := range e.Tokens {
 			switch {
@@ -192,8 +193,12 @@ func (e *Element) AppendChild(child *Element) {
 func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) error {
 	switch {
 	case e.comment():
-	case e.Type == TypeContent || e.Type == TypeExpression:
-		e.writeText(bf)
+	case e.Type == TypeContent || e.Type == TypeExpression || e.Type == TypeOutputExpression:
+		if e.Type == TypeOutputExpression {
+			bf.WriteString("{{" + strings.Join(e.Tokens[1:], " ") + "}}")
+		} else {
+			e.writeText(bf)
+		}
 		for _, child := range e.Children {
 			err := child.Html(bf, stringTemplates)
 			if err != nil {
@@ -298,7 +303,6 @@ func (e *Element) writeOpenTag(bf *bytes.Buffer) {
 // writeText writes the element's text to the buffer.
 func (e *Element) writeText(bf *bytes.Buffer) {
 	bf.WriteString(e.Text)
-	bf.WriteString("\n")
 }
 
 // textValue returns the element's textValues.
@@ -384,6 +388,8 @@ func (e *Element) setType() {
 		e.Type = TypeLiteral
 	case expression(e.Text):
 		e.Type = TypeExpression
+	case len(e.Tokens) > 0 && e.Tokens[0] == "=":
+		e.Type = TypeOutputExpression
 	default:
 		e.Type = TypeTag
 	}

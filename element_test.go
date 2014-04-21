@@ -464,6 +464,19 @@ func TestElementHtml(t *testing.T) {
 	if err := parent.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
+
+	// When the element's type is OutputExpression.
+	e, err = NewElement(`= "abc"`, 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf, nil); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	if bf.String() != `{{"abc"}}` {
+		t.Errorf("Html output is invalid. [output: %s]", bf.String())
+	}
 }
 
 func TestElementWriteOpenTag(t *testing.T) {
@@ -508,7 +521,7 @@ func TestElementWriteText(t *testing.T) {
 	e := &Element{Text: "This is a text."}
 	bf := bytes.Buffer{}
 	e.writeText(&bf)
-	expectedString := "This is a text.\n"
+	expectedString := "This is a text."
 	if bf.String() != expectedString {
 		t.Errorf("Buffer stirng should be %s", expectedString)
 	}
@@ -685,6 +698,14 @@ func TestElementSetType(t *testing.T) {
 	if e.Type != TypeInclude {
 		t.Errorf("Type should be %s", TypeInclude)
 	}
+
+	// When the element's first token is =.
+	e = &Element{Tokens: []string{"="}}
+	e.setType()
+	if e.Type != TypeOutputExpression {
+		t.Errorf("Type should be %s", TypeOutputExpression)
+	}
+
 }
 
 func TestElementGetTemplate(t *testing.T) {
