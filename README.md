@@ -414,6 +414,20 @@ div
   {{end}}
 ```
 
+You can use an equal mark(=) to output an expression value:
+
+```gold
+div
+  = .Title
+```
+
+the above code is equivalent to the blow code:
+
+```gold
+div
+  {{.Title}}
+```
+
 ### Parse template strings
 
 You can parse template strings and load templates from memory by using the generator's `ParseString` method.
