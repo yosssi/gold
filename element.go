@@ -33,21 +33,22 @@ var (
 
 // An Element represents an element of a Gold template.
 type Element struct {
-	Text       string
-	Tokens     []string
-	LineNo     int
-	Indent     int
-	Parent     *Element
-	Children   []*Element
-	Tag        string
-	Attributes map[string]string
-	Id         string
-	Classes    []string
-	TextValues []string
-	Type       string
-	Template   *Template
-	Block      *Block
-	RawContent bool
+	Text             string
+	Tokens           []string
+	LineNo           int
+	Indent           int
+	Parent           *Element
+	Children         []*Element
+	Tag              string
+	Attributes       map[string]string
+	SingleAttributes []string
+	Id               string
+	Classes          []string
+	TextValues       []string
+	Type             string
+	Template         *Template
+	Block            *Block
+	RawContent       bool
 }
 
 // parse parses the element.
@@ -68,6 +69,8 @@ func (e *Element) parse() error {
 				e.appendTextValue(token)
 			case attribute(token):
 				e.appendAttribute(token)
+			case singleAttribute(token):
+				e.appendSingleAttribute(token)
 			default:
 				e.appendTextValue(token)
 			}
@@ -183,6 +186,11 @@ func (e *Element) appendAttribute(token string) {
 	default:
 		e.Attributes[k] = v
 	}
+}
+
+func (e *Element) appendSingleAttribute(token string) {
+	e.SingleAttributes = append(e.SingleAttributes, strings.TrimSuffix(strings.TrimPrefix(token, "["), "]"))
+
 }
 
 // AppendChild appends the element to the receiver element.
@@ -301,6 +309,9 @@ func (e *Element) writeOpenTag(bf *bytes.Buffer) {
 		if e.hasAttributes() {
 			e.writeAttributes(bf)
 		}
+		if e.hasSingleAttributes() {
+			e.writeSingleAttributes(bf)
+		}
 		bf.WriteString(">")
 	}
 }
@@ -349,6 +360,11 @@ func (e *Element) hasAttributes() bool {
 	return len(e.Attributes) > 0
 }
 
+// hasSingleAttributes returns if the element has single attributes or not.
+func (e *Element) hasSingleAttributes() bool {
+	return len(e.SingleAttributes) > 0
+}
+
 // writeAttributes writes the element's attributes to the buffer.
 func (e *Element) writeAttributes(bf *bytes.Buffer) {
 	for k, v := range e.Attributes {
@@ -357,6 +373,14 @@ func (e *Element) writeAttributes(bf *bytes.Buffer) {
 		bf.WriteString("=\"")
 		bf.WriteString(v)
 		bf.WriteString("\"")
+	}
+}
+
+// writeSingleAttributes writes the element's single attributes to the buffer.
+func (e *Element) writeSingleAttributes(bf *bytes.Buffer) {
+	for _, v := range e.SingleAttributes {
+		bf.WriteString(" ")
+		bf.WriteString(v)
 	}
 }
 
@@ -448,18 +472,20 @@ func tokens(s string) []string {
 	tokens := make([]string, 0)
 	var joinedTokens []string
 	joined := false
+	var closeMark string
 	for _, token := range strings.Split(s, " ") {
 		if joined {
 			joinedTokens = append(joinedTokens, token)
-			if closed(token) {
+			if closed(token, closeMark) {
 				tokens = append(tokens, strings.Join(joinedTokens, " "))
 				joinedTokens = make([]string, 0)
 				joined = false
 			}
 		} else {
-			if unclosed(token) {
+			if unclosed, mark := unclosed(token); unclosed {
 				joined = true
 				joinedTokens = []string{token}
+				closeMark = mark
 			} else {
 				tokens = append(tokens, token)
 			}
@@ -472,18 +498,30 @@ func tokens(s string) []string {
 }
 
 // unclosed returns if the token is unclosed or not.
-func unclosed(token string) bool {
-	return len(strings.Split(token, "\"")) == 2
+func unclosed(token string) (bool, string) {
+	if len(strings.Split(token, "\"")) == 2 {
+		return true, `"`
+	}
+	if strings.HasPrefix(token, "[") && !strings.HasSuffix(token, "]") {
+		return true, "]"
+	}
+
+	return false, ""
 }
 
 // unclosed returns if the token is closed or not.
-func closed(token string) bool {
-	return strings.HasSuffix(token, "\"")
+func closed(token string, closeMark string) bool {
+	return strings.HasSuffix(token, closeMark)
 }
 
 // attribute returns if the token is a attribute set or not.
 func attribute(token string) bool {
 	return strings.Index(token, "=") >= 0
+}
+
+// singleAttribute returns if the token is a single attribute set or not.
+func singleAttribute(token string) bool {
+	return strings.HasPrefix(token, "[") && strings.HasSuffix(token, "]")
 }
 
 // parseValue parses the value and returns a result string.

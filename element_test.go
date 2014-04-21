@@ -815,24 +815,24 @@ func TestTokens(t *testing.T) {
 
 func TestUnclosed(t *testing.T) {
 	// When the token is unclosed.
-	if unclosed(`aaa"bbb`) != true {
+	if unclosed, _ := unclosed(`aaa"bbb`); unclosed != true {
 		t.Errorf("Returned value should be true.")
 	}
 
 	// When the token is closed.
-	if unclosed(`aaa"bbb"`) != false {
+	if unclosed, _ := unclosed(`aaa"bbb"`); unclosed != false {
 		t.Errorf("Returned value should be false.")
 	}
 }
 
 func TestClosed(t *testing.T) {
 	// When the token is closed.
-	if closed(`aaabbb"`) != true {
+	if closed(`aaabbb"`, `"`) != true {
 		t.Errorf("Returned value should be true.")
 	}
 
 	// When the token is unclosed.
-	if closed("aaa") != false {
+	if closed("aaa", `"`) != false {
 		t.Errorf("Returned value should be false.")
 	}
 }
