@@ -21,7 +21,11 @@ func TestTemplateHtml(t *testing.T) {
 	}
 	super.AppendElement(e)
 	tpl := &Template{Super: super}
-	s, err := tpl.Html(nil)
+	embedMap, err := NewEmbedMap([]string{"name=Foo"})
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	s, err := tpl.Html(nil, embedMap)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}

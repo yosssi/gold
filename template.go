@@ -21,9 +21,9 @@ func (t *Template) AppendElement(e *Element) {
 }
 
 // Html generates an html and returns it.
-func (t *Template) Html(stringTemplates map[string]string) (string, error) {
+func (t *Template) Html(stringTemplates map[string]string, embedMap EmbedMap) (string, error) {
 	if t.Super != nil {
-		return t.Super.Html(stringTemplates)
+		return t.Super.Html(stringTemplates, embedMap)
 	} else {
 		var bf bytes.Buffer
 		for _, e := range t.Elements {
@@ -32,7 +32,11 @@ func (t *Template) Html(stringTemplates map[string]string) (string, error) {
 				return "", err
 			}
 		}
-		return bf.String(), nil
+		html := bf.String()
+		for key, value := range embedMap {
+			html = strings.Replace(html, "%{"+key+"}", value, -1)
+		}
+		return html, nil
 	}
 }
 

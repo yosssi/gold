@@ -30,9 +30,10 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 	return g.generateTemplate(path, nil)
 }
 
-//Set Helpers
-func (g *Generator) SetHelpers(helperFuncs template.FuncMap) {
+// SetHelpers set the helperFuncs to the generator.
+func (g *Generator) SetHelpers(helperFuncs template.FuncMap) *Generator {
 	g.helperFuncs = helperFuncs
+	return g
 }
 
 // ParseString parses a Gold template string and returns an HTML template.
@@ -51,7 +52,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	if err != nil {
 		return nil, err
 	}
-	html, err := gtpl.Html(stringTemplates)
+	html, err := gtpl.Html(stringTemplates, nil)
 	if err != nil {
 		return nil, err
 	}

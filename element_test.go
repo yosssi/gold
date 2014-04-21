@@ -433,6 +433,16 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
+	// When the element's type is include.
+	g = NewGenerator(false)
+	tpl = NewTemplate("./test/TestElementHtml/somefile.gold", g)
+	e, err = NewElement("include ./002 param", 1, 0, nil, tpl, nil)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "the parameter did not have = and a key-value could not be derived. [parameter: param]"
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
 	// When the block's sub template does not exist and an error occurs.
 	g = NewGenerator(false)
 	tpl = NewTemplate("./test/TestElementHtml/003.gold", g)
@@ -463,6 +473,19 @@ func TestElementHtml(t *testing.T) {
 	expectedErrMsg = "The block element does not have a name. (line no: 2)"
 	if err := parent.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
+	// When the element's type is OutputExpression.
+	e, err = NewElement(`= "abc"`, 1, 0, nil, nil, nil)
+	if err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	bf = bytes.Buffer{}
+	if err := e.Html(&bf, nil); err != nil {
+		t.Errorf("An error(%s) occurred.", err.Error())
+	}
+	if bf.String() != `{{"abc"}}` {
+		t.Errorf("Html output is invalid. [output: %s]", bf.String())
 	}
 }
 
@@ -508,7 +531,7 @@ func TestElementWriteText(t *testing.T) {
 	e := &Element{Text: "This is a text."}
 	bf := bytes.Buffer{}
 	e.writeText(&bf)
-	expectedString := "This is a text.\n"
+	expectedString := "This is a text."
 	if bf.String() != expectedString {
 		t.Errorf("Buffer stirng should be %s", expectedString)
 	}
@@ -685,6 +708,14 @@ func TestElementSetType(t *testing.T) {
 	if e.Type != TypeInclude {
 		t.Errorf("Type should be %s", TypeInclude)
 	}
+
+	// When the element's first token is =.
+	e = &Element{Tokens: []string{"="}}
+	e.setType()
+	if e.Type != TypeOutputExpression {
+		t.Errorf("Type should be %s", TypeOutputExpression)
+	}
+
 }
 
 func TestElementGetTemplate(t *testing.T) {
