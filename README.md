@@ -290,7 +290,13 @@ Following Gold template includes `./index.gold`.
 
 ```gold
 p Hello Gold
-include ./index
+include ./index name=Foo
+```
+
+./index.gold
+```gold
+p Included tempalte
+input type=text value=%{name}
 ```
 
 ### Inheritance
