@@ -8,13 +8,14 @@ import (
 )
 
 const (
-	TypeTag              = "tag"
-	TypeContent          = "content"
-	TypeBlock            = "block"
-	TypeExpression       = "expression"
-	TypeLiteral          = "literal"
-	TypeInclude          = "include"
-	TypeOutputExpression = "outputExpression"
+	TypeTag               = "tag"
+	TypeContent           = "content"
+	TypeBlock             = "block"
+	TypeExpression        = "expression"
+	TypeLiteral           = "literal"
+	TypeInclude           = "include"
+	TypeOutputExpression  = "outputExpression"
+	IncludeParaStartIndex = 2
 )
 
 var (
@@ -244,7 +245,11 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 		if err != nil {
 			return err
 		}
-		incHtml, err := incTpl.Html(stringTemplates)
+		embedMap, err := NewEmbedMap(e.Tokens[IncludeParaStartIndex:])
+		if err != nil {
+			return err
+		}
+		incHtml, err := incTpl.Html(stringTemplates, embedMap)
 		if err != nil {
 			return err
 		}

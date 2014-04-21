@@ -52,7 +52,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	if err != nil {
 		return nil, err
 	}
-	html, err := gtpl.Html(stringTemplates)
+	html, err := gtpl.Html(stringTemplates, nil)
 	if err != nil {
 		return nil, err
 	}

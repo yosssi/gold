@@ -433,6 +433,16 @@ func TestElementHtml(t *testing.T) {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 
+	// When the element's type is include.
+	g = NewGenerator(false)
+	tpl = NewTemplate("./test/TestElementHtml/somefile.gold", g)
+	e, err = NewElement("include ./002 param", 1, 0, nil, tpl, nil)
+	bf = bytes.Buffer{}
+	expectedErrMsg = "the parameter did not have = and a key-value could not be derived. [parameter: param]"
+	if err := e.Html(&bf, nil); err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
+	}
+
 	// When the block's sub template does not exist and an error occurs.
 	g = NewGenerator(false)
 	tpl = NewTemplate("./test/TestElementHtml/003.gold", g)
