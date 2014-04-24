@@ -246,7 +246,12 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 		var incTpl *Template
 		var err error
 		if stringTemplates == nil {
-			incTpl, err = g.parse(tpl.Dir()+incTplPath+goldExtension, nil)
+			if CurrentDirectoryBasedPath(incTplPath) {
+				incTplPath = tpl.Dir() + incTplPath + goldExtension
+			} else {
+				incTplPath = Path(g.baseDir, incTplPath+goldExtension)
+			}
+			incTpl, err = g.parse(incTplPath, nil)
 		} else {
 			incTpl, err = g.parse(incTplPath, stringTemplates)
 		}

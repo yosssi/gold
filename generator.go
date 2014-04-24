@@ -23,6 +23,7 @@ type Generator struct {
 	templates   map[string]*template.Template
 	gtemplates  map[string]*Template
 	helperFuncs template.FuncMap
+	baseDir     string
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
@@ -30,9 +31,15 @@ func (g *Generator) ParseFile(path string) (*template.Template, error) {
 	return g.generateTemplate(path, nil)
 }
 
-// SetHelpers set the helperFuncs to the generator.
+// SetHelpers sets the helperFuncs to the generator.
 func (g *Generator) SetHelpers(helperFuncs template.FuncMap) *Generator {
 	g.helperFuncs = helperFuncs
+	return g
+}
+
+// SetBaseDir sets the base directory to the generator.
+func (g *Generator) SetBaseDir(baseDir string) *Generator {
+	g.baseDir = baseDir
 	return g
 }
 
@@ -70,6 +77,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 
 // parse parses a Gold template file and returns a Gold template.
 func (g *Generator) parse(path string, stringTemplates map[string]string) (*Template, error) {
+	path = Path(g.baseDir, path)
 	if g.cache {
 		if tpl, prs := g.gtemplates[path]; prs {
 			return tpl, nil
@@ -105,7 +113,12 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 				var superTpl *Template
 				var err error
 				if stringTemplates == nil {
-					superTpl, err = g.parse(tpl.Dir()+superTplPath+goldExtension, nil)
+					if CurrentDirectoryBasedPath(superTplPath) {
+						superTplPath = tpl.Dir() + superTplPath + goldExtension
+					} else {
+						superTplPath = Path(g.baseDir, superTplPath+goldExtension)
+					}
+					superTpl, err = g.parse(superTplPath, nil)
 				} else {
 					superTpl, err = g.parse(superTplPath, stringTemplates)
 				}
