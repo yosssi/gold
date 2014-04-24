@@ -499,6 +499,14 @@ func main() {
 }
 ```
 
+### Templates base directory
+
+You can set a base directory of Gold templates by calling `Generetor.SetBaseDir()`:
+
+```go
+  var g = gold.NewGenerator(true).SetBaseDir("/tmp/gold-templates")
+```
+
 ## Docs
 
 * [GoDoc](http://godoc.org/github.com/yosssi/gold)
