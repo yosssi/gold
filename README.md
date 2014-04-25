@@ -507,6 +507,89 @@ You can set a base directory of Gold templates by calling `Generetor.SetBaseDir(
   var g = gold.NewGenerator(true).SetBaseDir("/tmp/gold-templates")
 ```
 
+## Pretty Print
+
+You can format the result HTML source codes by using [GoHTML](https://github.com/yosssi/gohtml) package. [gohtml.Writer](https://godoc.org/github.com/yosssi/gohtml#Writer) formats HTML source codes and writes them.
+
+Example:
+
+```go
+package main
+
+import (
+	"os"
+
+	"github.com/yosssi/gohtml"
+	"github.com/yosssi/gold"
+)
+
+var g = gold.NewGenerator(false)
+
+func main() {
+	// template strings
+	parent := `
+doctype html
+html
+  head
+    title Gold
+  body
+    block content
+    footer
+      block footer
+`
+	child := `
+extends parent
+
+block content
+  #container
+    = .Msg
+
+block footer
+  .footer
+    | Copyright XXX
+`
+
+	stringTemplates := map[string]string{"parent": parent, "child": child}
+
+	tpl, err := g.ParseString(stringTemplates, "child")
+
+	if err != nil {
+		panic(err)
+	}
+
+	data := map[string]interface{}{"Msg": "Hello, Gold!"}
+
+	err = tpl.Execute(gohtml.NewWriter(os.Stdout), data)
+
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+Output:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      Gold
+    </title>
+  </head>
+  <body>
+    <div id="container">
+      Hello, Gold!
+    </div>
+    <footer>
+      <div class="footer">
+        Copyright XXX
+      </div>
+    </footer>
+  </body>
+</html>
+```
+
 ## Docs
 
 * [GoDoc](http://godoc.org/github.com/yosssi/gold)
