@@ -21,7 +21,7 @@ func TestGeneratorParseFile(t *testing.T) {
 	// When g.Parse returns an error.
 	g = &Generator{}
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/001.gold")
-	expectedErrMsg := "The indent of the line 2 is invalid."
+	expectedErrMsg := "The indent of the line 2 is invalid. [template: ./test/TestGeneratorParseFile/001.gold][lineno: 2][line: head]"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -115,7 +115,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/006.gold")
-	expectedErrMsg = "The line tokens length is invalid. (expected: 2, actual: 1, line no: 1)"
+	expectedErrMsg = "The line tokens length is invalid. (expected: 2, actual: 1, line no: 1, template: ./test/TestGeneratorParseFile/006.gold, line: extends)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -131,7 +131,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error while parsing a block line.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/008.gold")
-	expectedErrMsg = "The lien tokens length is invalid. (expected: 2, actual: 1, line no: 3)"
+	expectedErrMsg = "The line tokens length is invalid. (expected: 2, actual: 1, line no: 3, template: ./test/TestGeneratorParseFile/008.gold, line: block)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -139,7 +139,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error while appending a child.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/009.gold")
-	expectedErrMsg = "The indent of the line 4 is invalid."
+	expectedErrMsg = `The indent of the line 4 is invalid. [template: ./test/TestGeneratorParseFile/009.gold][lineno: 4][line: div#content.content style="font-size: 1rem; font-weight: bold;"]`
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -238,7 +238,7 @@ func TestAppendChildren(t *testing.T) {
 	// When line is empty.
 	i := 0
 	l := 1
-	err := appendChildren(nil, []string{""}, &i, &l, 0, false, "")
+	err := appendChildren(nil, []string{""}, &i, &l, 0, false, "", nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -246,7 +246,7 @@ func TestAppendChildren(t *testing.T) {
 	// parentRawContent is true and indent < parentIndent+1
 	i = 0
 	l = 1
-	err = appendChildren(nil, []string{"a"}, &i, &l, 0, true, "")
+	err = appendChildren(nil, []string{"a"}, &i, &l, 0, true, "", nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -258,7 +258,7 @@ func TestAppendChildren(t *testing.T) {
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
-	err = appendChildren(e, []string{"  div#id1#id2"}, &i, &l, 0, true, "")
+	err = appendChildren(e, []string{"  div#id1#id2"}, &i, &l, 0, true, "", nil)
 	expectedErrMsg := "The number of the element id has to be one. (line no: 1)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
@@ -267,7 +267,7 @@ func TestAppendChildren(t *testing.T) {
 	// parentType is TypeBlock and indent < parentIndent+1
 	i = 0
 	l = 1
-	err = appendChildren(nil, []string{"a"}, &i, &l, 0, false, TypeBlock)
+	err = appendChildren(nil, []string{"a"}, &i, &l, 0, false, TypeBlock, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -275,7 +275,7 @@ func TestAppendChildren(t *testing.T) {
 	// parentType is TypeBlock and indent >= parentIndent+1
 	i = 0
 	l = 1
-	err = appendChildren(e, []string{"  a"}, &i, &l, 0, false, TypeBlock)
+	err = appendChildren(e, []string{"  a"}, &i, &l, 0, false, TypeBlock, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -283,7 +283,7 @@ func TestAppendChildren(t *testing.T) {
 	// parentType is TypeTag and indent < parentIndent+1
 	i = 0
 	l = 1
-	err = appendChildren(nil, []string{"a"}, &i, &l, 0, false, TypeTag)
+	err = appendChildren(nil, []string{"a"}, &i, &l, 0, false, TypeTag, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -295,7 +295,7 @@ func TestAppendChildren(t *testing.T) {
 	}
 	i = 0
 	l = 1
-	err = appendChildren(e, []string{"  div#id1#id2"}, &i, &l, 0, false, TypeTag)
+	err = appendChildren(e, []string{"  div#id1#id2"}, &i, &l, 0, false, TypeTag, nil)
 	expectedErrMsg = "The number of the element id has to be one. (line no: 1)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
@@ -308,8 +308,10 @@ func TestAppendChildren(t *testing.T) {
 	}
 	i = 0
 	l = 1
-	err = appendChildren(e, []string{"    div"}, &i, &l, 0, false, TypeTag)
-	expectedErrMsg = "The indent of the line 1 is invalid."
+	g := NewGenerator(false)
+	tpl := NewTemplate("/tmp/tmp.gold", g)
+	err = appendChildren(e, []string{"    div"}, &i, &l, 0, false, TypeTag, tpl)
+	expectedErrMsg = "The indent of the line 1 is invalid. [template: /tmp/tmp.gold][lineno: 1][line: div]"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -321,7 +323,7 @@ func TestAppendChildren(t *testing.T) {
 	}
 	i = 0
 	l = 1
-	err = appendChildren(e, []string{"  div"}, &i, &l, 0, false, TypeTag)
+	err = appendChildren(e, []string{"  div"}, &i, &l, 0, false, TypeTag, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -334,7 +336,7 @@ func TestAppendChild(t *testing.T) {
 	l := 1
 	line := "div"
 	indent := 0
-	err := appendChild(block, &line, &indent, []string{"div"}, &i, &l)
+	err := appendChild(block, &line, &indent, []string{"div"}, &i, &l, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -348,7 +350,7 @@ func TestAppendChild(t *testing.T) {
 	l = 1
 	line = "div"
 	indent = 0
-	err = appendChild(e, &line, &indent, []string{"div"}, &i, &l)
+	err = appendChild(e, &line, &indent, []string{"div"}, &i, &l, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -362,7 +364,7 @@ func TestAppendChild(t *testing.T) {
 	l = 1
 	line = "div#id1#id2"
 	indent = 0
-	err = appendChild(e, &line, &indent, []string{"div#id1#id2"}, &i, &l)
+	err = appendChild(e, &line, &indent, []string{"div#id1#id2"}, &i, &l, nil)
 	expectedErrMsg := "The number of the element id has to be one. (line no: 1)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
@@ -377,7 +379,7 @@ func TestAppendChild(t *testing.T) {
 	l = 2
 	line = "div"
 	indent = 0
-	err = appendChild(e, &line, &indent, []string{"div", "  div#id3#id4"}, &i, &l)
+	err = appendChild(e, &line, &indent, []string{"div", "  div#id3#id4"}, &i, &l, nil)
 	expectedErrMsg = "The number of the element id has to be one. (line no: 2)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)

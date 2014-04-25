@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/yosssi/gohtml"
 )
 
 const (
@@ -24,6 +27,8 @@ type Generator struct {
 	gtemplates  map[string]*Template
 	helperFuncs template.FuncMap
 	baseDir     string
+	prettyPrint bool
+	debugWriter io.Writer
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
@@ -40,6 +45,18 @@ func (g *Generator) SetHelpers(helperFuncs template.FuncMap) *Generator {
 // SetBaseDir sets the base directory to the generator.
 func (g *Generator) SetBaseDir(baseDir string) *Generator {
 	g.baseDir = baseDir
+	return g
+}
+
+// SetPrettyPrint sets the prettyPrint to the generator.
+func (g *Generator) SetPrettyPrint(prettyPrint bool) *Generator {
+	g.prettyPrint = prettyPrint
+	return g
+}
+
+// SetDebugWriter sets a debugWriter to the generator.
+func (g *Generator) SetDebugWriter(debugWriter io.Writer) *Generator {
+	g.debugWriter = debugWriter
 	return g
 }
 
@@ -62,6 +79,13 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	html, err := gtpl.Html(stringTemplates, nil)
 	if err != nil {
 		return nil, err
+	}
+	if g.prettyPrint {
+		html = gohtml.Format(html)
+	}
+	if g.debugWriter != nil {
+		debugStr := gohtml.AddLineNo(html)
+		g.debugWriter.Write([]byte(debugStr + "\n"))
 	}
 	tpl := template.New(path)
 	tpl.Funcs(g.helperFuncs)
@@ -107,7 +131,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 			case isExtends(line):
 				tokens := strings.Split(strings.TrimSpace(line), " ")
 				if l := len(tokens); l != extendsBlockTokensLen {
-					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
+					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line)))
 				}
 				superTplPath := tokens[1]
 				var superTpl *Template
@@ -130,11 +154,11 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 			case tpl.Super != nil && isBlock(line):
 				tokens := strings.Split(strings.TrimSpace(line), " ")
 				if l := len(tokens); l != extendsBlockTokensLen {
-					return nil, errors.New(fmt.Sprintf("The lien tokens length is invalid. (expected: %d, actual: %d, line no: %d)", extendsBlockTokensLen, l, i))
+					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line)))
 				}
 				block := &Block{Name: tokens[1], Template: tpl}
 				tpl.AddBlock(block.Name, block)
-				if err := appendChildren(block, lines, &i, &l, indentTop, false, ""); err != nil {
+				if err := appendChildren(block, lines, &i, &l, indentTop, false, "", tpl); err != nil {
 					return nil, err
 				}
 			default:
@@ -143,7 +167,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 					return nil, err
 				}
 				tpl.AppendElement(e)
-				if err := appendChildren(e, lines, &i, &l, indentTop, e.RawContent, e.Type); err != nil {
+				if err := appendChildren(e, lines, &i, &l, indentTop, e.RawContent, e.Type, tpl); err != nil {
 					return nil, err
 				}
 			}
@@ -199,7 +223,7 @@ func topElement(s string) bool {
 }
 
 // appendChildren fetches the lines and appends child elements to the element.
-func appendChildren(parent Container, lines []string, i *int, l *int, parentIndent int, parentRawContent bool, parentType string) error {
+func appendChildren(parent Container, lines []string, i *int, l *int, parentIndent int, parentRawContent bool, parentType string, tpl *Template) error {
 	for *i < *l {
 		line := lines[*i]
 		if empty(line) {
@@ -213,7 +237,7 @@ func appendChildren(parent Container, lines []string, i *int, l *int, parentInde
 			case indent < parentIndent+1:
 				return nil
 			default:
-				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
+				if err := appendChild(parent, &line, &indent, lines, i, l, tpl); err != nil {
 					return err
 				}
 			}
@@ -222,11 +246,11 @@ func appendChildren(parent Container, lines []string, i *int, l *int, parentInde
 			case indent < parentIndent+1:
 				return nil
 			case indent == parentIndent+1:
-				if err := appendChild(parent, &line, &indent, lines, i, l); err != nil {
+				if err := appendChild(parent, &line, &indent, lines, i, l, tpl); err != nil {
 					return err
 				}
 			case indent > parentIndent+1:
-				return errors.New(fmt.Sprintf("The indent of the line %d is invalid.", *i+1))
+				return errors.New(fmt.Sprintf("The indent of the line %d is invalid. [template: %s][lineno: %d][line: %s]", *i+1, tpl.Path, *i+1, strings.TrimSpace(line)))
 			}
 		}
 	}
@@ -234,7 +258,7 @@ func appendChildren(parent Container, lines []string, i *int, l *int, parentInde
 }
 
 // appendChild appends the child element to the parent element.
-func appendChild(parent Container, line *string, indent *int, lines []string, i *int, l *int) error {
+func appendChild(parent Container, line *string, indent *int, lines []string, i *int, l *int, tpl *Template) error {
 	var child *Element
 	var err error
 	switch p := parent.(type) {
@@ -248,7 +272,7 @@ func appendChild(parent Container, line *string, indent *int, lines []string, i 
 	}
 	parent.AppendChild(child)
 	*i++
-	err = appendChildren(child, lines, i, l, child.Indent, child.RawContent, child.Type)
+	err = appendChildren(child, lines, i, l, child.Indent, child.RawContent, child.Type, tpl)
 	if err != nil {
 		return err
 	}
