@@ -4,6 +4,8 @@ env:
 script:
   - export GOPATH=/var/cache/drone
   - PATH=$PATH:$GOPATH/bin
+  - apt-get install -y mercurial
+  - go get github.com/yosssi/gohtml
   - go test --cover ./...
 git:
   depth: 1
