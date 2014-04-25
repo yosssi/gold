@@ -323,7 +323,7 @@ func (e *Element) writeOpenTag(bf *bytes.Buffer) {
 
 // writeText writes the element's text to the buffer.
 func (e *Element) writeText(bf *bytes.Buffer) {
-	bf.WriteString(e.Text)
+	bf.WriteString(e.Text + "\n")
 }
 
 // textValue returns the element's textValues.
@@ -461,10 +461,14 @@ func (e *Element) comment() bool {
 
 // NewElement generates a new element and returns it.
 func NewElement(text string, lineNo int, indent int, parent *Element, tpl *Template, block *Block) (*Element, error) {
+	rawText := text
 	text = strings.TrimSpace(text)
 	tokens := tokens(text)
 	e := &Element{Text: text, Tokens: tokens, LineNo: lineNo, Indent: indent, Parent: parent, Attributes: make(map[string]string), Template: tpl, Block: block}
 	e.setType()
+	if e.Type == TypeContent {
+		e.Text = rawText
+	}
 	err := e.parse()
 	if err != nil {
 		return nil, err

@@ -531,7 +531,7 @@ func TestElementWriteText(t *testing.T) {
 	e := &Element{Text: "This is a text."}
 	bf := bytes.Buffer{}
 	e.writeText(&bf)
-	expectedString := "This is a text."
+	expectedString := "This is a text.\n"
 	if bf.String() != expectedString {
 		t.Errorf("Buffer stirng should be %s", expectedString)
 	}
