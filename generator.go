@@ -24,6 +24,7 @@ const (
 type Generator struct {
 	cache       bool
 	templates   map[string]*template.Template
+	htmls       map[string]string
 	gtemplates  map[string]*Template
 	helperFuncs template.FuncMap
 	baseDir     string
@@ -33,6 +34,12 @@ type Generator struct {
 
 // ParseFile parses a Gold template file and returns an HTML template.
 func (g *Generator) ParseFile(path string) (*template.Template, error) {
+	tpl, _, err := g.generateTemplate(path, nil)
+	return tpl, err
+}
+
+// ParseFileWithHTML parses a Gold template file and returns an HTML template and HTML source codes.
+func (g *Generator) ParseFileWithHTML(path string) (*template.Template, string, error) {
 	return g.generateTemplate(path, nil)
 }
 
@@ -62,23 +69,30 @@ func (g *Generator) SetDebugWriter(debugWriter io.Writer) *Generator {
 
 // ParseString parses a Gold template string and returns an HTML template.
 func (g *Generator) ParseString(stringTemplates map[string]string, name string) (*template.Template, error) {
+	tpl, _, err := g.generateTemplate(name, stringTemplates)
+	return tpl, err
+}
+
+// ParseStringWithHTML parses a Gold template string and returns an HTML template and HTML source codes.
+func (g *Generator) ParseStringWithHTML(stringTemplates map[string]string, name string) (*template.Template, string, error) {
 	return g.generateTemplate(name, stringTemplates)
 }
 
 // generateTemplate parses a Gold template and returns an HTML template.
-func (g *Generator) generateTemplate(path string, stringTemplates map[string]string) (*template.Template, error) {
+func (g *Generator) generateTemplate(path string, stringTemplates map[string]string) (*template.Template, string, error) {
 	if g.cache {
 		if tpl, prs := g.templates[path]; prs {
-			return tpl, nil
+			html := g.htmls[path]
+			return tpl, html, nil
 		}
 	}
 	gtpl, err := g.parse(path, stringTemplates)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	html, err := gtpl.Html(stringTemplates, nil)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if g.prettyPrint {
 		html = gohtml.Format(html)
@@ -91,12 +105,13 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	tpl.Funcs(g.helperFuncs)
 	_, err = tpl.Parse(html)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if g.cache {
 		g.templates[path] = tpl
+		g.htmls[path] = html
 	}
-	return tpl, nil
+	return tpl, html, nil
 }
 
 // parse parses a Gold template file and returns a Gold template.
@@ -181,7 +196,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 
 // NewGenerator generages a generator and returns it.
 func NewGenerator(cache bool) *Generator {
-	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template)}
+	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template), htmls: make(map[string]string)}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.
