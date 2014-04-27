@@ -515,6 +515,98 @@ You can set a debug writer to the Gold generator so that you can inspect the int
 var g = gold.NewGenerator(false).SetPrettyPrint(true).SetDebugWriter(os.Stdout)
 ```
 
+### Get intermediate HTML source codes
+
+[Generator.ParseFileWithHTML](https://godoc.org/github.com/yosssi/gold#Generator.ParseFileWithHTML) and [Generator.ParseStringWithHTML](https://godoc.org/github.com/yosssi/gold#Generator.ParseStringWithHTML) return intermediate HTML source codes which Gold generates. You can write these HTML source codes for debugging.
+
+Example:
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"text/template"
+
+	"github.com/yosssi/gohtml"
+	"github.com/yosssi/gold"
+)
+
+var g = gold.NewGenerator(false).SetPrettyPrint(true)
+
+func handler(w http.ResponseWriter, r *http.Request) {
+
+	parent := `
+doctype html
+html
+  head
+    title {{.Title}}
+  body
+    block content
+    footer
+      block footer
+`
+	child := `
+extends parent
+
+block content
+  #container
+    {{.Msg.NotExistProperty}}
+block footer
+  .footer
+    | Copyright XXX
+`
+
+	stringTemplates := map[string]string{"parent": parent, "child": child}
+
+	tpl, html, err := g.ParseStringWithHTML(stringTemplates, "child")
+
+	if err != nil {
+		panic(err)
+	}
+
+	data := map[string]interface{}{"Title": "Gold", "Msg": "Hello!"}
+
+	err = tpl.Execute(w, data)
+
+	if err != nil {
+		fmt.Fprintf(w, "<pre>Error:\n%s\nHTML:\n%s</pre>", err.Error(), gohtml.AddLineNo(template.HTMLEscapeString(html)))
+	}
+}
+
+func main() {
+	http.HandleFunc("/", handler)
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+Output:
+
+```
+Error:
+template: child:10:12: executing "child" at <.Msg.NotExistPropert...>: can't evaluate field NotExistProperty in type interface {}
+HTML:
+ 1  <!DOCTYPE html>
+ 2  <html>
+ 3    <head>
+ 4      <title>
+ 5        {{.Title}}
+ 6      </title>
+ 7    </head>
+ 8    <body>
+ 9      <div id="container">
+10        {{.Msg.NotExistProperty}}
+11      </div>
+12      <footer>
+13        <div class="footer">
+14          Copyright XXX
+15        </div>
+16      </footer>
+17    </body>
+18  </html>
+```
+
 ## Pretty Print
 
 You can format the result HTML source codes by using [GoHTML](https://github.com/yosssi/gohtml) package. [gohtml.Writer](https://godoc.org/github.com/yosssi/gohtml#Writer) formats HTML source codes and writes them.
