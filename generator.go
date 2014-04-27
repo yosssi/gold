@@ -105,7 +105,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	tpl.Funcs(g.helperFuncs)
 	_, err = tpl.Parse(html)
 	if err != nil {
-		return nil, "", err
+		return nil, html, err
 	}
 	if g.cache {
 		g.templates[path] = tpl
