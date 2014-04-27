@@ -526,8 +526,8 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
-	"text/template"
 
 	"github.com/yosssi/gohtml"
 	"github.com/yosssi/gold"
