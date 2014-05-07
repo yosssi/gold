@@ -21,7 +21,7 @@ func TestGeneratorParseFile(t *testing.T) {
 	// When g.Parse returns an error.
 	g = &Generator{}
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/001.gold")
-	expectedErrMsg := "The indent of the line 2 is invalid. [template: ./test/TestGeneratorParseFile/001.gold][lineno: 2][line: head]"
+	expectedErrMsg := "the indent of the line 2 is invalid. [template: ./test/TestGeneratorParseFile/001.gold][lineno: 2][line: head]"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -88,7 +88,7 @@ func TestParse(t *testing.T) {
 	gtmplt := &Template{}
 	g := NewGenerator(true)
 	g.gtemplates = map[string]*Template{"path": gtmplt}
-	gtpl, err := g.parse("path", nil)
+	gtpl, err := g.parse("path", nil, false)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -99,7 +99,7 @@ func TestParse(t *testing.T) {
 	// When ioutil.ReadFile returns an error.
 	gtmplt = &Template{}
 	g = NewGenerator(false)
-	gtpl, err = g.parse("./somepath/somefile", nil)
+	gtpl, err = g.parse("./somepath/somefile", nil, true)
 	expectedErrMsg := "open ./somepath/somefile: no such file or directory"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
@@ -115,7 +115,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/006.gold")
-	expectedErrMsg = "The line tokens length is invalid. (expected: 2, actual: 1, line no: 1, template: ./test/TestGeneratorParseFile/006.gold, line: extends)"
+	expectedErrMsg = "the line tokens length is invalid. (expected: 2, actual: 1, line no: 1, template: ./test/TestGeneratorParseFile/006.gold, line: extends)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -131,7 +131,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error while parsing a block line.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/008.gold")
-	expectedErrMsg = "The line tokens length is invalid. (expected: 2, actual: 1, line no: 3, template: ./test/TestGeneratorParseFile/008.gold, line: block)"
+	expectedErrMsg = "the line tokens length is invalid. (expected: 2, actual: 1, line no: 3, template: ./test/TestGeneratorParseFile/008.gold, line: block)"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -139,7 +139,7 @@ func TestParse(t *testing.T) {
 	// When a template includes a "extends" and returns an error while appending a child.
 	g = NewGenerator(false)
 	_, err = g.ParseFile("./test/TestGeneratorParseFile/009.gold")
-	expectedErrMsg = `The indent of the line 4 is invalid. [template: ./test/TestGeneratorParseFile/009.gold][lineno: 4][line: div#content.content style="font-size: 1rem; font-weight: bold;"]`
+	expectedErrMsg = `the indent of the line 4 is invalid. [template: ./test/TestGeneratorParseFile/009.gold][lineno: 4][line: div#content.content style="font-size: 1rem; font-weight: bold;"]`
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
@@ -311,7 +311,7 @@ func TestAppendChildren(t *testing.T) {
 	g := NewGenerator(false)
 	tpl := NewTemplate("/tmp/tmp.gold", g)
 	err = appendChildren(e, []string{"    div"}, &i, &l, 0, false, TypeTag, tpl)
-	expectedErrMsg = "The indent of the line 1 is invalid. [template: /tmp/tmp.gold][lineno: 1][line: div]"
+	expectedErrMsg = "the indent of the line 1 is invalid. [template: /tmp/tmp.gold][lineno: 1][line: div]"
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}

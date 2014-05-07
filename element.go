@@ -245,15 +245,15 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 		g := tpl.Generator
 		var incTpl *Template
 		var err error
+		addBaseDir := true
 		if stringTemplates == nil {
-			if CurrentDirectoryBasedPath(incTplPath) {
-				incTplPath = tpl.Dir() + incTplPath + goldExtension
-			} else {
-				incTplPath = Path(g.baseDir, incTplPath+goldExtension)
+			if g.baseDir != "" && CurrentDirectoryBasedPath(incTplPath) {
+				incTplPath = tpl.Dir() + incTplPath
+				addBaseDir = false
 			}
-			incTpl, err = g.parse(incTplPath, nil)
+			incTpl, err = g.parse(incTplPath+goldExtension, nil, addBaseDir)
 		} else {
-			incTpl, err = g.parse(incTplPath, stringTemplates)
+			incTpl, err = g.parse(incTplPath, stringTemplates, addBaseDir)
 		}
 		if err != nil {
 			return err

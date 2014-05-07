@@ -1,11 +1,11 @@
 package gold
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/yosssi/gohtml"
@@ -20,7 +20,7 @@ const (
 	goldExtension         = ".gold"
 )
 
-// A generator represents an HTML generator.
+// Generator represents an HTML generator.
 type Generator struct {
 	cache       bool
 	templates   map[string]*template.Template
@@ -86,7 +86,7 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 			return tpl, html, nil
 		}
 	}
-	gtpl, err := g.parse(path, stringTemplates)
+	gtpl, err := g.parse(path, stringTemplates, true)
 	if err != nil {
 		return nil, "", err
 	}
@@ -115,8 +115,10 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 }
 
 // parse parses a Gold template file and returns a Gold template.
-func (g *Generator) parse(path string, stringTemplates map[string]string) (*Template, error) {
-	path = Path(g.baseDir, path)
+func (g *Generator) parse(path string, stringTemplates map[string]string, addBaseDir bool) (*Template, error) {
+	if addBaseDir {
+		path = Path(g.baseDir, path)
+	}
 	if g.cache {
 		if tpl, prs := g.gtemplates[path]; prs {
 			return tpl, nil
@@ -146,20 +148,20 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 			case isExtends(line):
 				tokens := strings.Split(strings.TrimSpace(line), " ")
 				if l := len(tokens); l != extendsBlockTokensLen {
-					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line)))
+					return nil, fmt.Errorf("the line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line))
 				}
 				superTplPath := tokens[1]
 				var superTpl *Template
 				var err error
+				addBaseDir := true
 				if stringTemplates == nil {
-					if CurrentDirectoryBasedPath(superTplPath) {
-						superTplPath = tpl.Dir() + superTplPath + goldExtension
-					} else {
-						superTplPath = Path(g.baseDir, superTplPath+goldExtension)
+					if g.baseDir != "" && CurrentDirectoryBasedPath(superTplPath) {
+						superTplPath = tpl.Dir() + superTplPath
+						addBaseDir = false
 					}
-					superTpl, err = g.parse(superTplPath, nil)
+					superTpl, err = g.parse(superTplPath+goldExtension, nil, addBaseDir)
 				} else {
-					superTpl, err = g.parse(superTplPath, stringTemplates)
+					superTpl, err = g.parse(superTplPath, stringTemplates, addBaseDir)
 				}
 				if err != nil {
 					return nil, err
@@ -169,7 +171,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 			case tpl.Super != nil && isBlock(line):
 				tokens := strings.Split(strings.TrimSpace(line), " ")
 				if l := len(tokens); l != extendsBlockTokensLen {
-					return nil, errors.New(fmt.Sprintf("The line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line)))
+					return nil, fmt.Errorf("the line tokens length is invalid. (expected: %d, actual: %d, line no: %d, template: %s, line: %s)", extendsBlockTokensLen, l, i, tpl.Path, strings.TrimSpace(line))
 				}
 				block := &Block{Name: tokens[1], Template: tpl}
 				tpl.AddBlock(block.Name, block)
@@ -196,7 +198,11 @@ func (g *Generator) parse(path string, stringTemplates map[string]string) (*Temp
 
 // NewGenerator generages a generator and returns it.
 func NewGenerator(cache bool) *Generator {
-	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template), htmls: make(map[string]string)}
+	baseDir, err := os.Getwd()
+	if err != nil {
+		baseDir = ""
+	}
+	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template), htmls: make(map[string]string), baseDir: baseDir}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.
@@ -265,7 +271,7 @@ func appendChildren(parent Container, lines []string, i *int, l *int, parentInde
 					return err
 				}
 			case indent > parentIndent+1:
-				return errors.New(fmt.Sprintf("The indent of the line %d is invalid. [template: %s][lineno: %d][line: %s]", *i+1, tpl.Path, *i+1, strings.TrimSpace(line)))
+				return fmt.Errorf("the indent of the line %d is invalid. [template: %s][lineno: %d][line: %s]", *i+1, tpl.Path, *i+1, strings.TrimSpace(line))
 			}
 		}
 	}
