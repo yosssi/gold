@@ -251,7 +251,7 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 				incTplPath = tpl.Dir() + incTplPath
 				addBaseDir = false
 			}
-			incTpl, err = g.parse(incTplPath+goldExtension, nil, addBaseDir)
+			incTpl, err = g.parse(incTplPath+Extension, nil, addBaseDir)
 		} else {
 			incTpl, err = g.parse(incTplPath, stringTemplates, addBaseDir)
 		}

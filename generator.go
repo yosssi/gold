@@ -17,7 +17,6 @@ const (
 	unicodeDoubleQuote    = 34
 	indentTop             = 0
 	extendsBlockTokensLen = 2
-	goldExtension         = ".gold"
 )
 
 // Generator represents an HTML generator.
@@ -159,7 +158,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string, addBas
 						superTplPath = tpl.Dir() + superTplPath
 						addBaseDir = false
 					}
-					superTpl, err = g.parse(superTplPath+goldExtension, nil, addBaseDir)
+					superTpl, err = g.parse(superTplPath+Extension, nil, addBaseDir)
 				} else {
 					superTpl, err = g.parse(superTplPath, stringTemplates, addBaseDir)
 				}
