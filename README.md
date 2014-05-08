@@ -22,7 +22,7 @@ html lang=en
         Gold is a template engine for Go.
         This simplifies HTML coding in Go web application development.
     javascript:
-      msg = 'Welcome to Gold!';
+      var msg = 'Welcome to Gold!';
       alert(msg);
 ```
 
