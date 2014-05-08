@@ -402,6 +402,7 @@ func (e *Element) writeTextValue(bf *bytes.Buffer) {
 func (e *Element) writeCloseTag(bf *bytes.Buffer) {
 	switch e.Tag {
 	case "doctype":
+	case "br":
 	default:
 		bf.WriteString("</")
 		bf.WriteString(e.Tag)
