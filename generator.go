@@ -33,13 +33,13 @@ type Generator struct {
 
 // ParseFile parses a Gold template file and returns an HTML template.
 func (g *Generator) ParseFile(path string) (*template.Template, error) {
-	tpl, _, err := g.generateTemplate(path, nil)
+	tpl, _, err := g.generateTemplate(path, nil, true)
 	return tpl, err
 }
 
 // ParseFileWithHTML parses a Gold template file and returns an HTML template and HTML source codes.
 func (g *Generator) ParseFileWithHTML(path string) (*template.Template, string, error) {
-	return g.generateTemplate(path, nil)
+	return g.generateTemplate(path, nil, true)
 }
 
 // SetHelpers sets the helperFuncs to the generator.
@@ -68,24 +68,24 @@ func (g *Generator) SetDebugWriter(debugWriter io.Writer) *Generator {
 
 // ParseString parses a Gold template string and returns an HTML template.
 func (g *Generator) ParseString(stringTemplates map[string]string, name string) (*template.Template, error) {
-	tpl, _, err := g.generateTemplate(name, stringTemplates)
+	tpl, _, err := g.generateTemplate(name, stringTemplates, false)
 	return tpl, err
 }
 
 // ParseStringWithHTML parses a Gold template string and returns an HTML template and HTML source codes.
 func (g *Generator) ParseStringWithHTML(stringTemplates map[string]string, name string) (*template.Template, string, error) {
-	return g.generateTemplate(name, stringTemplates)
+	return g.generateTemplate(name, stringTemplates, false)
 }
 
 // generateTemplate parses a Gold template and returns an HTML template.
-func (g *Generator) generateTemplate(path string, stringTemplates map[string]string) (*template.Template, string, error) {
+func (g *Generator) generateTemplate(path string, stringTemplates map[string]string, addBaseDir bool) (*template.Template, string, error) {
 	if g.cache {
 		if tpl, prs := g.templates[path]; prs {
 			html := g.htmls[path]
 			return tpl, html, nil
 		}
 	}
-	gtpl, err := g.parse(path, stringTemplates, true)
+	gtpl, err := g.parse(path, stringTemplates, addBaseDir)
 	if err != nil {
 		return nil, "", err
 	}
@@ -152,15 +152,15 @@ func (g *Generator) parse(path string, stringTemplates map[string]string, addBas
 				superTplPath := tokens[1]
 				var superTpl *Template
 				var err error
-				addBaseDir := true
 				if stringTemplates == nil {
+					addBaseDir := true
 					if g.baseDir != "" && CurrentDirectoryBasedPath(superTplPath) {
 						superTplPath = tpl.Dir() + superTplPath
 						addBaseDir = false
 					}
 					superTpl, err = g.parse(superTplPath+Extension, nil, addBaseDir)
 				} else {
-					superTpl, err = g.parse(superTplPath, stringTemplates, addBaseDir)
+					superTpl, err = g.parse(superTplPath, stringTemplates, false)
 				}
 				if err != nil {
 					return nil, err
