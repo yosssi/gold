@@ -690,6 +690,10 @@ Output:
 </html>
 ```
 
+## Martini middleware
+
+* [RenderGold](https://github.com/yosssi/rendergold)
+
 ## Docs
 
 * [GoDoc](http://godoc.org/github.com/yosssi/gold)
