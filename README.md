@@ -696,4 +696,5 @@ Output:
 
 ## Syntax Highlighting
 
-* [vim-gold](https://github.com/yosssi/vim-gold)
+* [Vim](https://github.com/yosssi/vim-gold)
+* [Sublime Text / TextMate](https://github.com/yosssi/gold-tmbundle)
