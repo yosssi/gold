@@ -21,15 +21,16 @@ const (
 
 // Generator represents an HTML generator.
 type Generator struct {
-	cache       bool
-	templates   map[string]*template.Template
-	htmls       map[string]string
-	gtemplates  map[string]*Template
-	helperFuncs template.FuncMap
-	baseDir     string
-	prettyPrint bool
-	debugWriter io.Writer
-	asset       func(string) ([]byte, error)
+	cache        bool
+	templates    map[string]*template.Template
+	htmls        map[string]string
+	gtemplates   map[string]*Template
+	helperFuncs  template.FuncMap
+	baseDir      string
+	prettyPrint  bool
+	debugWriter  io.Writer
+	asset        func(string) ([]byte, error)
+	assetBaseDir string
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
@@ -52,6 +53,7 @@ func (g *Generator) SetHelpers(helperFuncs template.FuncMap) *Generator {
 // SetBaseDir sets the base directory to the generator.
 func (g *Generator) SetBaseDir(baseDir string) *Generator {
 	g.baseDir = baseDir
+	g.assetBaseDir = baseDir
 	return g
 }
 
@@ -137,7 +139,7 @@ func (g *Generator) parse(path string, stringTemplates map[string]string, addBas
 		if g.asset == nil {
 			b, err = ioutil.ReadFile(path)
 		} else {
-			b, err = g.asset(assetPath(path, g.baseDir))
+			b, err = g.asset(assetPath(path, g.baseDir, g.assetBaseDir))
 		}
 		if err != nil {
 			return nil, err

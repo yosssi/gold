@@ -26,7 +26,7 @@ func AbsolutePath(path string) bool {
 }
 
 // assetPath constructs an asset path and returns it.
-func assetPath(path, baseDir string) string {
+func assetPath(path, baseDir, assetBaseDir string) string {
 	if strings.HasPrefix(path, baseDir) {
 		path = strings.Replace(path, baseDir, "", 1)
 		if strings.HasPrefix(path, "/") {
@@ -47,5 +47,9 @@ func assetPath(path, baseDir string) string {
 			tokens = append(tokens, s)
 		}
 	}
-	return strings.Join(tokens, "/")
+	path = strings.Join(tokens, "/")
+	if assetBaseDir != "" {
+		path = assetBaseDir + "/" + path
+	}
+	return path
 }
