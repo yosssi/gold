@@ -29,6 +29,7 @@ type Generator struct {
 	baseDir     string
 	prettyPrint bool
 	debugWriter io.Writer
+	asset       func(string) ([]byte, error)
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
@@ -63,6 +64,12 @@ func (g *Generator) SetPrettyPrint(prettyPrint bool) *Generator {
 // SetDebugWriter sets a debugWriter to the generator.
 func (g *Generator) SetDebugWriter(debugWriter io.Writer) *Generator {
 	g.debugWriter = debugWriter
+	return g
+}
+
+// SetAsset sets an asset to the generator.
+func (g *Generator) SetAsset(asset func(string) ([]byte, error)) *Generator {
+	g.asset = asset
 	return g
 }
 
@@ -125,7 +132,13 @@ func (g *Generator) parse(path string, stringTemplates map[string]string, addBas
 	}
 	var s string
 	if stringTemplates == nil {
-		b, err := ioutil.ReadFile(path)
+		var b []byte
+		var err error
+		if g.asset == nil {
+			b, err = ioutil.ReadFile(path)
+		} else {
+			b, err = g.asset(assetPath(path, g.baseDir))
+		}
 		if err != nil {
 			return nil, err
 		}

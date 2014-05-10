@@ -24,3 +24,28 @@ func CurrentDirectoryBasedPath(path string) bool {
 func AbsolutePath(path string) bool {
 	return strings.HasPrefix(path, "/")
 }
+
+// assetPath constructs an asset path and returns it.
+func assetPath(path, baseDir string) string {
+	if strings.HasPrefix(path, baseDir) {
+		path = strings.Replace(path, baseDir, "", 1)
+		if strings.HasPrefix(path, "/") {
+			path = strings.Replace(path, "/", "", 1)
+		}
+	}
+	if strings.HasPrefix(path, "./") {
+		path = strings.Replace(path, "./", "", 1)
+	}
+	path = strings.Replace(path, "/./", "/", -1)
+	var tokens []string
+	for _, s := range strings.Split(path, "/") {
+		if s == ".." {
+			if l := len(tokens); l > 0 {
+				tokens = tokens[0 : l-1]
+			}
+		} else {
+			tokens = append(tokens, s)
+		}
+	}
+	return strings.Join(tokens, "/")
+}
