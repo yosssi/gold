@@ -1,6 +1,6 @@
 # Gold - Template engine for Go
 
-[![wercker status](https://app.wercker.com/status/8a354f4755ec7b919d0a67fb219aaa05/m "wercker status")](https://app.wercker.com/project/bykey/8a354f4755ec7b919d0a67fb219aaa05)
+[![wercker status](https://app.wercker.com/status/8a354f4755ec7b919d0a67fb219aaa05/s "wercker status")](https://app.wercker.com/project/bykey/8a354f4755ec7b919d0a67fb219aaa05)
 [![GoDoc](http://godoc.org/github.com/yosssi/gold?status.png)](http://godoc.org/github.com/yosssi/gold)
 
 Gold is a template engine for [Go](http://golang.org/). This simplifies HTML coding in Go web application development. This is influenced by [Slim](http://slim-lang.com/) and [Jade](http://jade-lang.com/).
