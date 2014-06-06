@@ -737,3 +737,4 @@ Output:
 
 * [Vim](https://github.com/yosssi/vim-gold)
 * [Sublime Text / TextMate](https://github.com/yosssi/gold-tmbundle)
+* [Emacs](https://github.com/yuutayamada/gold-mode-el)
