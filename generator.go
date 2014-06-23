@@ -17,6 +17,8 @@ const (
 	unicodeDoubleQuote    = 34
 	indentTop             = 0
 	extendsBlockTokensLen = 2
+	defaultDelimLeft      = "{{"
+	defaultDelimRight     = "}}"
 )
 
 // Generator represents an HTML generator.
@@ -31,6 +33,8 @@ type Generator struct {
 	debugWriter  io.Writer
 	asset        func(string) ([]byte, error)
 	assetBaseDir string
+	delimLeft    string
+	delimRight   string
 }
 
 // ParseFile parses a Gold template file and returns an HTML template.
@@ -75,6 +79,13 @@ func (g *Generator) SetAsset(asset func(string) ([]byte, error)) *Generator {
 	return g
 }
 
+// Delims sets the action delimiters to the specified strings
+func (g *Generator) Delims(left, right string) *Generator {
+	g.delimLeft = left
+	g.delimRight = right
+	return g
+}
+
 // ParseString parses a Gold template string and returns an HTML template.
 func (g *Generator) ParseString(stringTemplates map[string]string, name string) (*template.Template, error) {
 	tpl, _, err := g.generateTemplate(name, stringTemplates, false)
@@ -111,6 +122,9 @@ func (g *Generator) generateTemplate(path string, stringTemplates map[string]str
 	}
 	tpl := template.New(path)
 	tpl.Funcs(g.helperFuncs)
+	if g.delimLeft != defaultDelimLeft || g.delimRight != defaultDelimRight {
+		tpl.Delims(g.delimLeft, g.delimRight)
+	}
 	_, err = tpl.Parse(html)
 	if err != nil {
 		return nil, html, err
@@ -216,7 +230,7 @@ func NewGenerator(cache bool) *Generator {
 	if err != nil {
 		baseDir = ""
 	}
-	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template), htmls: make(map[string]string), baseDir: baseDir}
+	return &Generator{cache: cache, templates: make(map[string]*template.Template), gtemplates: make(map[string]*Template), htmls: make(map[string]string), baseDir: baseDir, delimLeft: defaultDelimLeft, delimRight: defaultDelimRight}
 }
 
 // formatLf returns a string whose line feed codes are replaced with LF.
