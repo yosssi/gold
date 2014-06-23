@@ -15,8 +15,11 @@ func TestBlockAppendChild(t *testing.T) {
 }
 
 func TestBlockHtml(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	b := &Block{}
-	e, err := NewElement("div#id.class attr=val This is a text.", 1, 0, nil, nil, b)
+	b.Template = tpl
+	e, err := NewElement("div#id.class attr=val This is a text.", 1, 0, nil, tpl, b)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}

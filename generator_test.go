@@ -235,6 +235,9 @@ func TestTopElement(t *testing.T) {
 }
 
 func TestAppendChildren(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
+
 	// When line is empty.
 	i := 0
 	l := 1
@@ -254,7 +257,7 @@ func TestAppendChildren(t *testing.T) {
 	// parentRawContent is true and indent >= parentIndent+1 and appendChild returns an error.
 	i = 0
 	l = 1
-	e, err := NewElement("", 0, 0, nil, nil, nil)
+	e, err := NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -289,7 +292,7 @@ func TestAppendChildren(t *testing.T) {
 	}
 
 	// parentType is TypeTag and indent == parentIndent+1 and appendChild returns an error.
-	e, err = NewElement("", 0, 0, nil, nil, nil)
+	e, err = NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -302,14 +305,14 @@ func TestAppendChildren(t *testing.T) {
 	}
 
 	// parentType is TypeTag and indent > parentIndent+1.
-	e, err = NewElement("", 0, 0, nil, nil, nil)
+	e, err = NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	i = 0
 	l = 1
-	g := NewGenerator(false)
-	tpl := NewTemplate("/tmp/tmp.gold", g)
+	g = NewGenerator(false)
+	tpl = NewTemplate("/tmp/tmp.gold", g)
 	err = appendChildren(e, []string{"    div"}, &i, &l, 0, false, TypeTag, tpl)
 	expectedErrMsg = "the indent of the line 1 is invalid. [template: /tmp/tmp.gold][lineno: 1][line: div]"
 	if err == nil || err.Error() != expectedErrMsg {
@@ -317,7 +320,7 @@ func TestAppendChildren(t *testing.T) {
 	}
 
 	// parentType is TypeTag and indent == parentIndent+1 and appendChild returns no errors.
-	e, err = NewElement("", 0, 0, nil, nil, nil)
+	e, err = NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -330,8 +333,11 @@ func TestAppendChildren(t *testing.T) {
 }
 
 func TestAppendChild(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
+
 	// When parent is *Block.
-	block := &Block{}
+	block := &Block{Template: tpl}
 	i := 0
 	l := 1
 	line := "div"
@@ -342,7 +348,7 @@ func TestAppendChild(t *testing.T) {
 	}
 
 	// When parent is *Element.
-	e, err := NewElement("", 0, 0, nil, nil, nil)
+	e, err := NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -356,7 +362,7 @@ func TestAppendChild(t *testing.T) {
 	}
 
 	// When parent is *Element and NewElement returns an error.
-	e, err = NewElement("", 0, 0, nil, nil, nil)
+	e, err = NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -371,7 +377,7 @@ func TestAppendChild(t *testing.T) {
 	}
 
 	// When parent is *Element and appendChildren returns an error.
-	e, err = NewElement("", 0, 0, nil, nil, nil)
+	e, err = NewElement("", 0, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}

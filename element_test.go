@@ -7,8 +7,10 @@ import (
 )
 
 func TestElementParse(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	// When an element has no tokens.
-	e := &Element{LineNo: 5}
+	e := &Element{LineNo: 5, Template: tpl}
 	err := e.parse()
 	expectedErrMsg := fmt.Sprintf("The element has no tokens. (line no: %d)", e.LineNo)
 	if err == nil || err.Error() != expectedErrMsg {
@@ -44,7 +46,7 @@ func TestElementParse(t *testing.T) {
 	}
 
 	// When an element's type is TypeTag.
-	e, err = NewElement("div data-test=test test test2", 1, 0, nil, nil, nil)
+	e, err = NewElement("div data-test=test test test2", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("Error(%s) occurred.", err.Error())
 	}
@@ -292,8 +294,10 @@ func TestElementAppendChild(t *testing.T) {
 }
 
 func TestElementHtml(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	// When the element's type is expression and child.Html returns an error.
-	parent, err := NewElement("{{}}", 1, 0, nil, nil, nil)
+	parent, err := NewElement("{{}}", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -319,7 +323,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is block and the template's sub is nil.
-	tpl := &Template{}
+	tpl = &Template{}
 	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
@@ -331,7 +335,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is block and the template's sub's block is nil.
-	tpl = &Template{Sub: &Template{Blocks: make(map[string]*Block)}}
+	tpl = &Template{Sub: &Template{Blocks: make(map[string]*Block), Generator: g}, Generator: g}
 	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
@@ -342,13 +346,13 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is block.
-	block := &Block{Name: "test"}
+	block := &Block{Name: "test", Template: tpl}
 	blockElement, err := NewElement("div#id.class attr=val This is a text.", 1, 0, nil, nil, block)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
 	block.AppendChild(blockElement)
-	tpl = &Template{Sub: &Template{Blocks: map[string]*Block{"test": block}}}
+	tpl = &Template{Sub: &Template{Blocks: map[string]*Block{"test": block}}, Generator: g}
 	e, err = NewElement("block test", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
@@ -363,7 +367,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is tag and child.Html returns an error.
-	e, err = NewElement("p This is a text.", 1, 0, nil, nil, nil)
+	e, err = NewElement("p This is a text.", 1, 0, nil, tpl, nil)
 	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -379,7 +383,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is tag and child.Html returns an error.
-	e, err = NewElement("div.class", 1, 0, nil, nil, nil)
+	e, err = NewElement("div.class", 1, 0, nil, tpl, nil)
 	if err := e.Html(&bf, nil); err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -405,7 +409,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is include and g.Parse returns an error.
-	g := NewGenerator(false)
+	g = NewGenerator(false)
 	tpl = NewTemplate("path", g)
 	e, err = NewElement("include ./somepath/somefile", 1, 0, nil, tpl, nil)
 	bf = bytes.Buffer{}
@@ -476,7 +480,7 @@ func TestElementHtml(t *testing.T) {
 	}
 
 	// When the element's type is OutputExpression.
-	e, err = NewElement(`= "abc"`, 1, 0, nil, nil, nil)
+	e, err = NewElement(`= "abc"`, 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -490,8 +494,10 @@ func TestElementHtml(t *testing.T) {
 }
 
 func TestElementWriteOpenTag(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	// When element's tag is doctype and a text value is html.
-	e, err := NewElement("doctype html", 1, 0, nil, nil, nil)
+	e, err := NewElement("doctype html", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -503,7 +509,7 @@ func TestElementWriteOpenTag(t *testing.T) {
 	}
 
 	// When element's tag is doctype and the element has a custom text value.
-	e, err = NewElement("doctype AABBCC", 1, 0, nil, nil, nil)
+	e, err = NewElement("doctype AABBCC", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -515,7 +521,7 @@ func TestElementWriteOpenTag(t *testing.T) {
 	}
 
 	// When element's tag is doctype and the element has a custom text value.
-	e, err = NewElement("div#id.class attr=val AAABBBCCC", 1, 0, nil, nil, nil)
+	e, err = NewElement("div#id.class attr=val AAABBBCCC", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -658,9 +664,11 @@ func TestElementCloseTag(t *testing.T) {
 }
 
 func TestElementSetType(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	// When the element's Parent.RawContent is true.
-	parent := &Element{RawContent: true}
-	e := &Element{Parent: parent}
+	parent := &Element{RawContent: true, Template: tpl}
+	e := &Element{Parent: parent, Template: tpl}
 	e.setType()
 	if e.Type != TypeContent {
 		t.Errorf("Type should be %s", TypeContent)
@@ -689,14 +697,14 @@ func TestElementSetType(t *testing.T) {
 	}
 
 	// When the element's text is an expression.
-	e = &Element{Text: "{{.}}"}
+	e = &Element{Text: "{{.}}", Template: tpl}
 	e.setType()
 	if e.Type != TypeExpression {
 		t.Errorf("Type should be %s", TypeExpression)
 	}
 
 	// When the element's text is an tag element.
-	e = &Element{Text: "div"}
+	e = &Element{Text: "div", Template: tpl}
 	e.setType()
 	if e.Type != TypeTag {
 		t.Errorf("Type should be %s", TypeTag)
@@ -710,7 +718,7 @@ func TestElementSetType(t *testing.T) {
 	}
 
 	// When the element's first token is =.
-	e = &Element{Tokens: []string{"="}}
+	e = &Element{Tokens: []string{"="}, Template: tpl}
 	e.setType()
 	if e.Type != TypeOutputExpression {
 		t.Errorf("Type should be %s", TypeOutputExpression)
@@ -780,15 +788,17 @@ func TestElementComment(t *testing.T) {
 }
 
 func TestNewElement(t *testing.T) {
+	g := NewGenerator(false)
+	tpl := NewTemplate("/", g)
 	// When an error occurs while parsing.
-	_, err := NewElement("div#id1#id2", 1, 0, nil, nil, nil)
+	_, err := NewElement("div#id1#id2", 1, 0, nil, tpl, nil)
 	expectedErrMsg := fmt.Sprintf("The number of the element id has to be one. (line no: %d)", 1)
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Error(%s) should be returned.", expectedErrMsg)
 	}
 
 	// When an element is returned.
-	e, err := NewElement("div", 1, 0, nil, nil, nil)
+	e, err := NewElement("div", 1, 0, nil, tpl, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())
 	}
@@ -875,12 +885,12 @@ func TestLiteral(t *testing.T) {
 
 func TestExpression(t *testing.T) {
 	// When the value is expression.
-	if expression("{{.}}") != true {
+	if expression("{{.}}", NewGenerator(false)) != true {
 		t.Errorf("Returned value should be true.")
 	}
 
 	// When the value is not expression.
-	if expression("aaa") != false {
+	if expression("aaa", NewGenerator(false)) != false {
 		t.Errorf("Returned value should be false.")
 	}
 }

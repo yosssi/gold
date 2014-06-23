@@ -14,7 +14,8 @@ func TestTemplateAppendElement(t *testing.T) {
 }
 
 func TestTemplateHtml(t *testing.T) {
-	super := &Template{}
+	g := NewGenerator(false)
+	super := &Template{Generator: g}
 	e, err := NewElement("div#id.class attr=val This is a text.", 1, 0, nil, super, nil)
 	if err != nil {
 		t.Errorf("An error(%s) occurred.", err.Error())

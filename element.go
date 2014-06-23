@@ -203,8 +203,9 @@ func (e *Element) Html(bf *bytes.Buffer, stringTemplates map[string]string) erro
 	switch {
 	case e.comment():
 	case e.Type == TypeContent || e.Type == TypeExpression || e.Type == TypeOutputExpression:
+		g := e.getGenerator()
 		if e.Type == TypeOutputExpression {
-			bf.WriteString("{{" + strings.Join(e.Tokens[1:], " ") + "}}")
+			bf.WriteString(g.delimLeft + strings.Join(e.Tokens[1:], " ") + g.delimRight)
 		} else {
 			e.writeText(bf)
 		}
@@ -421,7 +422,7 @@ func (e *Element) setType() {
 		e.Type = TypeInclude
 	case len(e.Tokens) > 0 && e.Tokens[0] == "|":
 		e.Type = TypeLiteral
-	case expression(e.Text):
+	case expression(e.Text, e.getGenerator()):
 		e.Type = TypeExpression
 	case len(e.Tokens) > 0 && e.Tokens[0] == "=":
 		e.Type = TypeOutputExpression
@@ -440,6 +441,10 @@ func (e *Element) getTemplate() *Template {
 	default:
 		return e.Template
 	}
+}
+
+func (e *Element) getGenerator() *Generator {
+	return e.getTemplate().Generator
 }
 
 // literalValue returns the element's literal value.
@@ -548,6 +553,6 @@ func literal(s string) bool {
 }
 
 // expression returns the string is an expression or not.
-func expression(s string) bool {
-	return strings.HasPrefix(s, "{{") && strings.HasSuffix(s, "}}")
+func expression(s string, g *Generator) bool {
+	return strings.HasPrefix(s, g.delimLeft) && strings.HasSuffix(s, g.delimRight)
 }
