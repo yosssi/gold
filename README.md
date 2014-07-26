@@ -1,3 +1,5 @@
+# THIS PACKAGE IS DEPRECATED. PLEASE USE [Ace](https://github.com/yosssi/ace) WHICH IS A REFINEMENT OF THIS PACKAGE.
+
 # Gold - Template engine for Go
 
 [![wercker status](https://app.wercker.com/status/8a354f4755ec7b919d0a67fb219aaa05/s "wercker status")](https://app.wercker.com/project/bykey/8a354f4755ec7b919d0a67fb219aaa05)
